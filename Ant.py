@@ -8,7 +8,7 @@ class Ant:
         self.total_cost = start_city.stays * lodging.price
         self.total_distance = 0
         self.total_day = self.get_total_days()
-        self.amenity_score = self.get_amenity_score()
+        # self.amenity_score = self.get_amenity_score()
 
     def visit_city(self, city, travel_cost):
         self.total_cost += travel_cost
@@ -46,9 +46,15 @@ class Ant:
         next_city = random.choices(cities, weights=probs, k=1)[0]
         return next_city
 
-    def get_amenity_score(self):
+    def return_to_start(self, gas_consumption):
+        if self.visited:
+            start_city = self.visited[0]
+            return_cost = self.current_city.distance_to(start_city) * gas_consumption
+            self.visit_city(start_city, return_cost)
+
+    def get_amenity_score(self, ant_path):
         amenity_score = 0
-        for city in self.visited:
+        for city in ant_path:
             amenity_score += city.amenity_score_per_day * city.stays
         return amenity_score
 

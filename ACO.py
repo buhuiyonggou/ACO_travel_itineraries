@@ -4,7 +4,7 @@ from Ant import Ant
 from cities import City
 from lodging import Lodging
 
-TOTAL_BUDGET = 3000
+TOTAL_BUDGET = 5000
 TOTAL_DAYS = 10
 GAS_CONSUMPTION_RATIO = 0.5
 NUM_ANTS = 50
@@ -48,6 +48,7 @@ def calculate_travel_cost(current_city, next_city, gas_consumption_ratio):
     return travel_cost
 
 
+# reset visited path for ants but do not change pheromones on paths
 for iteration in range(NUM_ITERATIONS):
     random_city = random.choice(cities)
     matching_lodging = next(
@@ -67,15 +68,19 @@ for ant in ants:
             ant.current_city, next_city, GAS_CONSUMPTION_RATIO
         )
         ant.visit_city(next_city, travel_cost)
+    # back to the start_city
+    ant.return_to_start(GAS_CONSUMPTION_RATIO)
+    # record the complete path for each ant
     tours.append(ant.visited)
 
+    amenity_score = ant.get_amenity_score(ant.visited)
     # Check if the new tour has a higher amenity score and satisfies budget and day constraints
     if (
         ant.total_cost <= TOTAL_BUDGET
         and ant.total_day <= TOTAL_DAYS
-        and ant.amenity_score > best_amenity_score
+        and amenity_score > best_amenity_score
     ):
-        best_amenity_score = ant.amenity_score
+        best_amenity_score = amenity_score
         best_tour = ant.current_path()
 
     # Update the pheromone matrix
