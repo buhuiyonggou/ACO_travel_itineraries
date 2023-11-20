@@ -19,6 +19,7 @@ class Ant:
     def can_travel_more(self, maximum_day, budget):
         return self.total_cost < budget and self.total_day < maximum_day
 
+    # the probablity equals: pheromone_level of current path/total probabilities of all unvisited path
     def calculate_probabilities(self, pheromone_matrix, city_to_index, alpha, beta):
         probabilities = {}
         total = 0
@@ -34,6 +35,7 @@ class Ant:
                     (1.0 / distance) ** beta
                 )
                 total += probabilities[city]
+        # get prob = next_chosen_path/total prob of unvisited cities
         probabilities = {city: prob / total for city, prob in probabilities.items()}
         return probabilities
 
@@ -47,7 +49,7 @@ class Ant:
     def get_amenity_score(self):
         amenity_score = 0
         for city in self.visited:
-            amenity_score += city.ammenity_score_per_day * city.stays
+            amenity_score += city.amenity_score_per_day * city.stays
         return amenity_score
 
     def get_total_days(self):

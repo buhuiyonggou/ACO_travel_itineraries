@@ -11,7 +11,7 @@ class City:
         self.longitude = longitude
         self.stays = stays
         self.population = population
-        self.ammenity_score_per_day = population * TRAVEL_TARGET_RATIO
+        self.amenity_score_per_day = population * TRAVEL_TARGET_RATIO
 
     def distance_to(self, other_city):
         lat1, lon1 = map(math.radians, [self.latitude, self.longitude])

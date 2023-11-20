@@ -37,6 +37,7 @@ city_to_index = {city: i for i, city in enumerate(cities)}
 # Initialize the pheromone matrix
 pheromone_matrix = PheromoneMatrix(len(cities), INITIAL_PHEROMONE, EVAPORATION_RATE)
 
+tours = list()
 best_tour = None
 best_amenity_score = 0
 
@@ -66,6 +67,7 @@ for ant in ants:
             ant.current_city, next_city, GAS_CONSUMPTION_RATIO
         )
         ant.visit_city(next_city, travel_cost)
+    tours.append(ant.visited)
 
     # Check if the new tour has a higher amenity score and satisfies budget and day constraints
     if (
@@ -80,9 +82,9 @@ for ant in ants:
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
 
-
+print("Tours:", [[city.name for city in tour] for tour in tours])
 print("Best Tour:", [city.name for city in best_tour])
 print("Stay in days:", [city.stays for city in best_tour])
-print("Got scores:", [city.ammenity_score_per_day for city in best_tour])
+print("Got scores:", [city.amenity_score_per_day for city in best_tour])
 print("Total cost", ant.total_cost)
 print("Amenity Score:", best_amenity_score)
