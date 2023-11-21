@@ -1,7 +1,7 @@
 import math
 
 RADIUS_EARTH = 6371
-TRAVEL_TARGET_RATIO = 0.05
+TRAVEL_TARGET_RATIO = 0.01
 
 
 class City:
@@ -11,7 +11,7 @@ class City:
         self.longitude = longitude
         self.stays = stays
         self.population = population
-        self.amenity_score_per_day = population * TRAVEL_TARGET_RATIO
+        self.amenity_score_per_day = round(population * TRAVEL_TARGET_RATIO, 2)
 
     def distance_to(self, other_city):
         lat1, lon1 = map(math.radians, [self.latitude, self.longitude])

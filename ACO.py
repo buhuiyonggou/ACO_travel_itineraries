@@ -4,14 +4,14 @@ from Ant import Ant
 from cities import City
 from lodging import Lodging
 
-TOTAL_BUDGET = 5000
+TOTAL_BUDGET = 4000
 TOTAL_DAYS = 10
 GAS_CONSUMPTION_RATIO = 0.5
 NUM_ANTS = 50
 NUM_ITERATIONS = 200
-INITIAL_PHEROMONE = 1.0
+INITIAL_PHEROMONE = 0.5
 EVAPORATION_RATE = 0.3
-PHEROMONE_DEPOSIT = 1.0
+PHEROMONE_DEPOSIT = 10
 ALPHA = 1.0
 BETA = 1.1
 
@@ -56,38 +56,38 @@ for iteration in range(NUM_ITERATIONS):
     )
     ants = [Ant(random_city, matching_lodging) for _ in range(NUM_ANTS)]
 
-for ant in ants:
-    while ant.can_travel_more(TOTAL_DAYS, TOTAL_BUDGET):
-        probabilities = ant.calculate_probabilities(
-            pheromone_matrix, city_to_index, ALPHA, BETA
-        )
-        if not probabilities:
-            break
-        next_city = ant.choose_next_city(probabilities)
-        travel_cost = calculate_travel_cost(
-            ant.current_city, next_city, GAS_CONSUMPTION_RATIO
-        )
-        ant.visit_city(next_city, travel_cost)
-    # back to the start_city
-    ant.return_to_start(GAS_CONSUMPTION_RATIO)
-    # record the complete path for each ant
-    tours.append(ant.visited)
+    for ant in ants:
+        while ant.can_travel_more(TOTAL_DAYS, TOTAL_BUDGET):
+            probabilities = ant.calculate_probabilities(
+                pheromone_matrix, city_to_index, ALPHA, BETA
+            )
+            if not probabilities:
+                break
+            next_city = ant.choose_next_city(probabilities)
+            travel_cost = calculate_travel_cost(
+                ant.current_city, next_city, GAS_CONSUMPTION_RATIO
+            )
+            ant.visit_city(next_city, travel_cost)
+        # back to the start_city
+        ant.return_to_start(GAS_CONSUMPTION_RATIO)
+        # record the complete path for each ant
+        tours.append(ant.visited)
 
-    amenity_score = ant.get_amenity_score(ant.visited)
-    # Check if the new tour has a higher amenity score and satisfies budget and day constraints
-    if (
-        ant.total_cost <= TOTAL_BUDGET
-        and ant.total_day <= TOTAL_DAYS
-        and amenity_score > best_amenity_score
-    ):
-        best_amenity_score = amenity_score
-        best_tour = ant.current_path()
+        amenity_score = ant.get_amenity_score(ant.visited)
+        # Check if the new tour has a higher amenity score and satisfies budget and day constraints
+        if (
+            ant.total_cost <= TOTAL_BUDGET
+            and ant.total_day <= TOTAL_DAYS
+            and amenity_score > best_amenity_score
+        ):
+            best_amenity_score = amenity_score
+            best_tour = ant.current_path()
 
     # Update the pheromone matrix
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
 
-print("Tours:", [[city.name for city in tour] for tour in tours])
+# print("Tours:", [[city.name for city in tour] for tour in tours])
 print("Best Tour:", [city.name for city in best_tour])
 print("Stay in days:", [city.stays for city in best_tour])
 print("Got scores:", [city.amenity_score_per_day for city in best_tour])
