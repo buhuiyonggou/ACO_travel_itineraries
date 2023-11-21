@@ -1,12 +1,12 @@
-import random
+import random, requests
 from PheromoneMatrix import PheromoneMatrix
 from Ant import Ant
 from cities import City
 from lodging import Lodging
 
-TOTAL_BUDGET = 4000
-TOTAL_DAYS = 10
-GAS_CONSUMPTION_RATIO = 0.5
+TOTAL_BUDGET = 10000
+TOTAL_DAYS = 20
+GAS_CONSUMPTION_RATIO = 0.0005
 NUM_ANTS = 50
 NUM_ITERATIONS = 200
 INITIAL_PHEROMONE = 0.5
@@ -40,13 +40,72 @@ pheromone_matrix = PheromoneMatrix(len(cities), INITIAL_PHEROMONE, EVAPORATION_R
 tours = list()
 best_tour = None
 best_amenity_score = 0
+api_key = 'AIzaSyDb6GaNOwz0r7whnH885uJTjzRbCkiplZY'
 
+# 初始化一个字典来存储距离
+distance_cache = {}
+
+
+def get_coordinates(city_name, api_key):
+    params = {
+        'address': city_name,
+        'key': api_key
+    }
+    response = requests.get(
+        "https://maps.googleapis.com/maps/api/geocode/json", params=params)
+    data = response.json()
+    if 'results' in data and len(data['results']) > 0:
+        latitude = data['results'][0]['geometry']['location']['lat']
+        longitude = data['results'][0]['geometry']['location']['lng']
+        return latitude, longitude
+    else:
+        print(f"Coordinates not found for {city_name}")
+        return None, None
+
+
+def get_driving_distance(origin_name, destination_name, api_key):
+    origin_lat, origin_lng = get_coordinates(origin_name, api_key)
+    dest_lat, dest_lng = get_coordinates(destination_name, api_key)
+
+    if origin_lat is None or dest_lat is None:
+        return 0  # 或者选择一个合适的默认值或错误处理方式
+
+    params = {
+        'origin': f'{origin_lat},{origin_lng}',
+        'destination': f'{dest_lat},{dest_lng}',
+        'key': api_key,
+        'mode': 'driving'
+    }
+    response = requests.get(
+        "https://maps.googleapis.com/maps/api/directions/json", params=params)
+    data = response.json()
+
+    if 'routes' in data and len(data['routes']) > 0:
+        distance = data['routes'][0]['legs'][0]['distance']['value']  # 米
+        return distance
+    else:
+        print(f"No route found between {origin_name} and {destination_name}.")
+        return 0  # 或者选择一个合适的默认值或错误处理方式
+    
+
+def get_driving_distance_cached(origin_name, destination_name, api_key):
+    # 创建一个键来标识这两个城市
+    cache_key = (origin_name, destination_name)
+
+    # 检查缓存中是否已经有了距离
+    if cache_key in distance_cache:
+        return distance_cache[cache_key]
+
+    # 如果没有缓存，调用 API 并存储结果
+    distance = get_driving_distance(origin_name, destination_name, api_key)
+    distance_cache[cache_key] = distance
+    return distance
 
 def calculate_travel_cost(current_city, next_city, gas_consumption_ratio):
-    distance = current_city.distance_to(next_city)
+    distance = get_driving_distance_cached(
+        current_city.name, next_city.name, api_key)
     travel_cost = distance * gas_consumption_ratio
     return travel_cost
-
 
 # reset visited path for ants but do not change pheromones on paths
 for iteration in range(NUM_ITERATIONS):
@@ -87,7 +146,7 @@ for iteration in range(NUM_ITERATIONS):
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
 
-# print("Tours:", [[city.name for city in tour] for tour in tours])
+print("Tours:", [[city.name for city in tour] for tour in tours])
 print("Best Tour:", [city.name for city in best_tour])
 print("Stay in days:", [city.stays for city in best_tour])
 print("Got scores:", [city.amenity_score_per_day for city in best_tour])
