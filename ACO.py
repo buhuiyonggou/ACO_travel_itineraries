@@ -1,19 +1,25 @@
-import random, requests
+import random
 from PheromoneMatrix import PheromoneMatrix
 from Ant import Ant
 from cities import City
 from lodging import Lodging
+from DataCollection import (
+    get_driving_cost_cached,
+)
+from globalDefinition import (
+    ALPHA,
+    BETA,
+    GAS_CONSUMPTION_RATIO,
+    PHEROMONE_DEPOSIT,
+    INITIAL_PHEROMONE,
+    EVAPORATION_RATE,
+)
 
-TOTAL_BUDGET = 8000
+TOTAL_BUDGET = 20000
 TOTAL_DAYS = 10
-GAS_CONSUMPTION_RATIO = 0.5
 NUM_ANTS = 50
 NUM_ITERATIONS = 200
-INITIAL_PHEROMONE = 0.5
-EVAPORATION_RATE = 0.3
-PHEROMONE_DEPOSIT = 10
-ALPHA = 1.0
-BETA = 1.1
+
 
 cities = [
     City("Ottawa", 45.4215, -75.6972, stays=1, population=994800),
@@ -37,69 +43,11 @@ city_to_index = {city: i for i, city in enumerate(cities)}
 # Initialize the pheromone matrix
 pheromone_matrix = PheromoneMatrix(len(cities), INITIAL_PHEROMONE, EVAPORATION_RATE)
 
+# record successful paths
 tours = list()
 best_tour = None
 best_amenity_score = 0
-api_key = 'AIzaSyDb6GaNOwz0r7whnH885uJTjzRbCkiplZY'
 
-# 初始化一个字典来存储距离
-distance_cache = {}
-
-
-def get_coordinates(city_name, api_key):
-    params = {
-        'address': city_name,
-        'key': api_key
-    }
-    response = requests.get(
-        "https://maps.googleapis.com/maps/api/geocode/json", params=params)
-    data = response.json()
-    if 'results' in data and len(data['results']) > 0:
-        latitude = data['results'][0]['geometry']['location']['lat']
-        longitude = data['results'][0]['geometry']['location']['lng']
-        return latitude, longitude
-    else:
-        print(f"Coordinates not found for {city_name}")
-        return None, None
-
-
-def get_driving_cost(origin_name, destination_name, api_key):
-    origin_lat, origin_lng = get_coordinates(origin_name, api_key)
-    dest_lat, dest_lng = get_coordinates(destination_name, api_key)
-
-    if origin_lat is None or dest_lat is None:
-        return 0
-
-    params = {
-        'origin': f'{origin_lat},{origin_lng}',
-        'destination': f'{dest_lat},{dest_lng}',
-        'key': api_key,
-        'mode': 'driving'
-    }
-    response = requests.get(
-        "https://maps.googleapis.com/maps/api/directions/json", params=params)
-    data = response.json()
-
-    if 'routes' in data and len(data['routes']) > 0:
-        distance = data['routes'][0]['legs'][0]['distance']['value'] / 1000  # km
-        duration = data['routes'][0]['legs'][0]['duration']['value'] / 3600 / 24  # day
-        print(distance, duration)
-        return distance, duration
-    else:
-        print(f"No route found between {origin_name} and {destination_name}.")
-        return 0, 0
-    
-
-def get_driving_cost_cached(origin_name, destination_name, api_key):
-    cache_key = (origin_name, destination_name)
-
-    if cache_key in distance_cache:
-        return distance_cache[cache_key]
-
-    distance, duration = get_driving_cost(
-        origin_name, destination_name, api_key)
-    distance_cache[cache_key] = (distance, duration)
-    return distance, duration
 
 # reset visited path for ants but do not change pheromones on paths
 for iteration in range(NUM_ITERATIONS):
@@ -118,21 +66,24 @@ for iteration in range(NUM_ITERATIONS):
                 break
             next_city = ant.choose_next_city(probabilities)
             distance, travel_time = get_driving_cost_cached(
-                ant.current_city.name, next_city.name, api_key)
+                ant.current_city.name, next_city.name
+            )
             travel_cost = distance * GAS_CONSUMPTION_RATIO
-            ant.visit_city(next_city, travel_cost, travel_time)
+            ant.visit_city(next_city, travel_cost, distance, travel_time)
         # record the complete path for each ant
-        tours.append(ant.visited)
-
-        amenity_score = ant.get_amenity_score(ant.visited)
-        # Check if the new tour has a higher amenity score and satisfies budget and day constraints
-        if (
-            ant.total_cost <= TOTAL_BUDGET
-            and ant.total_day <= TOTAL_DAYS
-            and amenity_score > best_amenity_score
+        if ant.can_return_to_start(
+            len(cities), GAS_CONSUMPTION_RATIO, TOTAL_DAYS, TOTAL_BUDGET
         ):
-            best_amenity_score = amenity_score
-            best_tour = ant.current_path()
+            tours.append(ant.visited)
+            amenity_score = ant.get_amenity_score(ant.visited)
+            # Check if the new tour has a higher amenity score and satisfies budget and day constraints
+            if (
+                ant.total_cost <= TOTAL_BUDGET
+                and ant.total_time <= TOTAL_DAYS
+                and amenity_score > best_amenity_score
+            ):
+                best_amenity_score = amenity_score
+                best_tour = ant.current_path()
 
     # Update the pheromone matrix
     for ant in ants:
