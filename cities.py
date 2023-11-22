@@ -1,11 +1,15 @@
 TRAVEL_TARGET_RATIO = 0.01
+import random
 
 
 class City:
-    def __init__(self, name, latitude, longitude, stays, population):
+    def __init__(self, name, country, stays_limit):
         self.name = name
-        self.latitude = latitude
-        self.longitude = longitude
-        self.stays = stays
-        self.population = population
-        self.amenity_score_per_day = round(population * TRAVEL_TARGET_RATIO, 2)
+        self.country = country
+        self.stays_limit = stays_limit
+        self.actual_stays = random.randint(1, stays_limit)
+        self.population = 0
+        self.amenity_score_per_day = 0
+
+    def assign_amenity_score(self):
+        self.amenity_score_per_day = round(self.population * TRAVEL_TARGET_RATIO, 2)

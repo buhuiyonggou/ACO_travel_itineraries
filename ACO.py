@@ -3,9 +3,7 @@ from PheromoneMatrix import PheromoneMatrix
 from Ant import Ant
 from cities import City
 from lodging import Lodging
-from DataCollection import (
-    get_driving_cost_cached,
-)
+from DataCollection import get_driving_cost_cached, get_city_population
 from globalDefinition import (
     ALPHA,
     BETA,
@@ -15,28 +13,29 @@ from globalDefinition import (
     EVAPORATION_RATE,
 )
 
-TOTAL_BUDGET = 20000
+TOTAL_BUDGET = 6000
 TOTAL_DAYS = 10
 NUM_ANTS = 100
 NUM_ITERATIONS = 100
 
-
 cities = [
-    City("Ottawa", 45.4215, -75.6972, stays=1, population=994800),
-    City("Toronto", 43.65107, -79.347015, stays=2, population=2930000),
-    City("Montreal", 45.5017, -73.5673, stays=2, population=1780000),
-    City("Vancouver", 49.2827, -123.1207, stays=2, population=662248),
-    City("Edmonton", 53.5461, -113.4938, stays=1, population=981300),
-    City("Calgary", 51.0447, -114.0719, stays=2, population=1336000),
+    City(name="Tokyo", country="Japan", stays_limit=5),
+    City(name="Kamakura", country="Japan", stays_limit=2),
+    City(name="Hakone", country="Japan", stays_limit=3),
+    City(name="Fujikawaguchiko", country="Japan", stays_limit=3),
+    City(name="Numazu", country="Japan", stays_limit=2),
+    City(name="Shimoda", country="Japan", stays_limit=2),
+    City(name="Atami", country="Japan", stays_limit=2),
 ]
 
 lodging = [
-    Lodging("Ottawa", 180),
-    Lodging("Toronto", 200),
-    Lodging("Montreal", 150),
-    Lodging("Vancouver", 210),
-    Lodging("Edmonton", 160),
-    Lodging("Calgary", 170),
+    Lodging("Tokyo", 150),
+    Lodging("Kamakura", 100),
+    Lodging("Hakone", 250),
+    Lodging("Fujikawaguchiko", 240),
+    Lodging("Numazu", 90),
+    Lodging("Shimoda", 280),
+    Lodging("Atami", 120),
 ]
 
 city_to_index = {city: i for i, city in enumerate(cities)}
@@ -48,6 +47,9 @@ tours = list()
 best_tour = None
 best_amenity_score = 0
 
+for city in cities:
+    city.population = get_city_population(city.name, city.country)
+    city.assign_amenity_score()
 
 # reset visited path for ants but do not change pheromones on paths
 for iteration in range(NUM_ITERATIONS):
@@ -55,33 +57,44 @@ for iteration in range(NUM_ITERATIONS):
     matching_lodging = next(
         lodge for lodge in lodging if lodge.city == random_city.name
     )
-    ants = [Ant(random_city, matching_lodging) for _ in range(NUM_ANTS)]
+    ants = [Ant(random_city) for _ in range(NUM_ANTS)]
 
     for ant in ants:
-        while ant.can_travel_more(TOTAL_DAYS, TOTAL_BUDGET):
+        while ant.can_travel_more(TOTAL_DAYS, TOTAL_BUDGET) and len(ant.visited) < len(
+            cities
+        ):
             probabilities = ant.calculate_probabilities(
                 pheromone_matrix, city_to_index, ALPHA, BETA
             )
             if not probabilities:
                 break
             next_city = ant.choose_next_city(probabilities)
-            distance, travel_time = get_driving_cost_cached(
-                ant.current_city.name, next_city.name
-            )
-            travel_cost = distance * GAS_CONSUMPTION_RATIO
-            ant.visit_city(next_city, travel_cost, distance, travel_time)
+            if next_city is not None:
+                distance, travel_time = get_driving_cost_cached(
+                    ant.current_city.name, next_city.name
+                )
+                travel_cost = distance * GAS_CONSUMPTION_RATIO
+                ant.visit_city(next_city, travel_cost, distance, travel_time)
+                ant.update_lodging_cost(next_city, lodging)
         # record the complete path for each ant
-        if ant.can_return_to_start(
-            len(cities), GAS_CONSUMPTION_RATIO, TOTAL_DAYS, TOTAL_BUDGET
+        distance_back, travel_time_back = get_driving_cost_cached(
+            ant.visited[len(cities) - 1].name, ant.visited[0].name
+        )
+        if len(ant.visited) == len(cities) and ant.can_travel_more(
+            TOTAL_DAYS - travel_time_back,
+            TOTAL_BUDGET - distance_back * GAS_CONSUMPTION_RATIO,
         ):
+            # exclude duplicated scores of the starting point
+            amenity_score = ant.get_amenity_score(ant.visited[:-1])
+            ant.visit_city(
+                ant.visited[0],
+                distance_back * GAS_CONSUMPTION_RATIO,
+                distance_back,
+                travel_time_back,
+            )
             tours.append(ant.visited)
-            amenity_score = ant.get_amenity_score(ant.visited)
             # Check if the new tour has a higher amenity score and satisfies budget and day constraints
-            if (
-                ant.total_cost <= TOTAL_BUDGET
-                and ant.total_time <= TOTAL_DAYS
-                and amenity_score > best_amenity_score
-            ):
+            if amenity_score > best_amenity_score:
                 best_amenity_score = amenity_score
                 best_tour = ant.current_path()
 
@@ -91,7 +104,10 @@ for iteration in range(NUM_ITERATIONS):
 
 # print("Tours:", [[city.name for city in tour] for tour in tours])
 print("Best Tour:", [city.name for city in best_tour])
-print("Stay in days:", [city.stays for city in best_tour])
-print("Got scores:", [city.amenity_score_per_day for city in best_tour])
+print("Stay in days:", [city.actual_stays for city in best_tour])
+print(
+    "Got scores:",
+    [round(city.amenity_score_per_day * city.actual_stays, 2) for city in best_tour],
+)
 print("Total cost", ant.total_cost)
 print("Amenity Score:", best_amenity_score)

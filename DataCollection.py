@@ -40,7 +40,9 @@ def get_driving_cost(origin_name, destination_name):
     if "routes" in data and len(data["routes"]) > 0:
         distance = data["routes"][0]["legs"][0]["distance"]["value"] / 1000  # km
         duration = data["routes"][0]["legs"][0]["duration"]["value"] / 3600 / 24  # day
-        print(distance, duration)
+        print(
+            f"distance between {origin_name} and {destination_name} is {distance}, spending {round(24* duration, 2)} hours"
+        )
         return distance, duration
     else:
         print(f"No route found between {origin_name} and {destination_name}.")
@@ -56,3 +58,25 @@ def get_driving_cost_cached(origin_name, destination_name):
     distance, duration = get_driving_cost(origin_name, destination_name)
     distance_cache[cache_key] = (distance, duration)
     return distance, duration
+
+
+def get_city_population(city_name, country_name):
+    base_url = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records"
+
+    params = {"where": f"name='{city_name}' AND cou_name_en='{country_name}'"}
+
+    response = requests.get(base_url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        results = data.get("results", [])
+        if results:
+            city_data = results[0]  # suppose the first result is what we need
+            population = city_data.get("population", "unknown")
+            return population
+        else:
+            print(f"Can't find data from {city_name}, {country_name}")
+            return None
+    else:
+        print(f"request failed: {response.status_code}")
+        return None
