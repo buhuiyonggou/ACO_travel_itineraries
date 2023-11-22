@@ -10,8 +10,9 @@ class Ant:
         self.total_day = self.get_total_days()
         # self.amenity_score = self.get_amenity_score()
 
-    def visit_city(self, city, travel_cost):
+    def visit_city(self, city, travel_cost, travel_time):
         self.total_cost += travel_cost
+        self.total_day += travel_time
         self.total_distance += self.current_city.distance_to(city)
         self.current_city = city
         self.visited.append(city)

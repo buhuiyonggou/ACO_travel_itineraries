@@ -4,9 +4,9 @@ from Ant import Ant
 from cities import City
 from lodging import Lodging
 
-TOTAL_BUDGET = 10000
-TOTAL_DAYS = 20
-GAS_CONSUMPTION_RATIO = 0.0005
+TOTAL_BUDGET = 8000
+TOTAL_DAYS = 10
+GAS_CONSUMPTION_RATIO = 0.5
 NUM_ANTS = 50
 NUM_ITERATIONS = 200
 INITIAL_PHEROMONE = 0.5
@@ -63,12 +63,12 @@ def get_coordinates(city_name, api_key):
         return None, None
 
 
-def get_driving_distance(origin_name, destination_name, api_key):
+def get_driving_cost(origin_name, destination_name, api_key):
     origin_lat, origin_lng = get_coordinates(origin_name, api_key)
     dest_lat, dest_lng = get_coordinates(destination_name, api_key)
 
     if origin_lat is None or dest_lat is None:
-        return 0  # 或者选择一个合适的默认值或错误处理方式
+        return 0
 
     params = {
         'origin': f'{origin_lat},{origin_lng}',
@@ -81,31 +81,25 @@ def get_driving_distance(origin_name, destination_name, api_key):
     data = response.json()
 
     if 'routes' in data and len(data['routes']) > 0:
-        distance = data['routes'][0]['legs'][0]['distance']['value']  # 米
-        return distance
+        distance = data['routes'][0]['legs'][0]['distance']['value'] / 1000  # km
+        duration = data['routes'][0]['legs'][0]['duration']['value'] / 3600 / 24  # day
+        print(distance, duration)
+        return distance, duration
     else:
         print(f"No route found between {origin_name} and {destination_name}.")
-        return 0  # 或者选择一个合适的默认值或错误处理方式
+        return 0, 0
     
 
-def get_driving_distance_cached(origin_name, destination_name, api_key):
-    # 创建一个键来标识这两个城市
+def get_driving_cost_cached(origin_name, destination_name, api_key):
     cache_key = (origin_name, destination_name)
 
-    # 检查缓存中是否已经有了距离
     if cache_key in distance_cache:
         return distance_cache[cache_key]
 
-    # 如果没有缓存，调用 API 并存储结果
-    distance = get_driving_distance(origin_name, destination_name, api_key)
-    distance_cache[cache_key] = distance
-    return distance
-
-def calculate_travel_cost(current_city, next_city, gas_consumption_ratio):
-    distance = get_driving_distance_cached(
-        current_city.name, next_city.name, api_key)
-    travel_cost = distance * gas_consumption_ratio
-    return travel_cost
+    distance, duration = get_driving_cost(
+        origin_name, destination_name, api_key)
+    distance_cache[cache_key] = (distance, duration)
+    return distance, duration
 
 # reset visited path for ants but do not change pheromones on paths
 for iteration in range(NUM_ITERATIONS):
@@ -123,12 +117,10 @@ for iteration in range(NUM_ITERATIONS):
             if not probabilities:
                 break
             next_city = ant.choose_next_city(probabilities)
-            travel_cost = calculate_travel_cost(
-                ant.current_city, next_city, GAS_CONSUMPTION_RATIO
-            )
-            ant.visit_city(next_city, travel_cost)
-        # back to the start_city
-        ant.return_to_start(GAS_CONSUMPTION_RATIO)
+            distance, travel_time = get_driving_cost_cached(
+                ant.current_city.name, next_city.name, api_key)
+            travel_cost = distance * GAS_CONSUMPTION_RATIO
+            ant.visit_city(next_city, travel_cost, travel_time)
         # record the complete path for each ant
         tours.append(ant.visited)
 
@@ -146,7 +138,7 @@ for iteration in range(NUM_ITERATIONS):
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
 
-print("Tours:", [[city.name for city in tour] for tour in tours])
+# print("Tours:", [[city.name for city in tour] for tour in tours])
 print("Best Tour:", [city.name for city in best_tour])
 print("Stay in days:", [city.stays for city in best_tour])
 print("Got scores:", [city.amenity_score_per_day for city in best_tour])
