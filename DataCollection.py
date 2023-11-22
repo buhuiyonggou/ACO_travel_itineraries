@@ -56,3 +56,27 @@ def get_driving_cost_cached(origin_name, destination_name):
     distance, duration = get_driving_cost(origin_name, destination_name)
     distance_cache[cache_key] = (distance, duration)
     return distance, duration
+
+
+def get_city_population(city_name, country_name):
+    base_url = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records"
+
+    params = {
+        'where': f"name='{city_name}' AND cou_name_en='{country_name}'"
+    }
+
+    response = requests.get(base_url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        results = data.get('results', [])
+        if results:
+            city_data = results[0] # suppose the first result is what we need
+            population = city_data.get('population', '未知')
+            return population
+        else:
+            print(f"未找到{city_name}, {country_name}的数据")
+            return None
+    else:
+        print(f"请求失败，状态码：{response.status_code}")
+        return None

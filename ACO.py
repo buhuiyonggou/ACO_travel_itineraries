@@ -5,6 +5,7 @@ from cities import City
 from lodging import Lodging
 from DataCollection import (
     get_driving_cost_cached,
+    get_city_population
 )
 from globalDefinition import (
     ALPHA,
@@ -95,3 +96,6 @@ print("Stay in days:", [city.stays for city in best_tour])
 print("Got scores:", [city.amenity_score_per_day for city in best_tour])
 print("Total cost", ant.total_cost)
 print("Amenity Score:", best_amenity_score)
+
+population = get_city_population("Tokyo", "Japan")
+print(f"Tokyo's polulation: {population}")
