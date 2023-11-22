@@ -17,8 +17,8 @@ from globalDefinition import (
 
 TOTAL_BUDGET = 20000
 TOTAL_DAYS = 10
-NUM_ANTS = 50
-NUM_ITERATIONS = 200
+NUM_ANTS = 100
+NUM_ITERATIONS = 100
 
 
 cities = [

@@ -62,7 +62,9 @@ class Ant:
                 self.current_city.name, self.visited[0].name
             )
             return_trip_cost = return_distance * gas_consumption
-            if self.can_travel_more(total_days, total_budget - return_trip_cost):
+            if self.can_travel_more(
+                total_days - return_travel_time, total_budget - return_trip_cost
+            ):
                 self.visit_city(
                     start_city, return_trip_cost, return_distance, return_travel_time
                 )
