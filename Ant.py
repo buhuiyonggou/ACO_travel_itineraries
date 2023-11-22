@@ -1,21 +1,22 @@
 import random
 from DataCollection import get_driving_cost_cached
+from globalDefinition import GAS_CONSUMPTION_RATIO
 
 
 class Ant:
-    def __init__(self, start_city):
+    def __init__(self, start_city, matching_lodging):
         self.current_city = start_city
         self.visited = [start_city]
-        self.total_cost = 0
+        self.total_cost = matching_lodging.price * start_city.actual_stays
         self.total_distance = 0
         # count the total time expenditure on the route
         self.total_time_on_route = 0
         # count the total time expenditure on accommodations
-        self.total_time_stays = 0
+        self.total_time_stays = start_city.actual_stays
         self.total_time = self.get_total_time()
 
-    def visit_city(self, city, travel_cost, distance, current_travel_time):
-        self.total_cost += travel_cost
+    def visit_city(self, city, distance, current_travel_time):
+        self.total_cost += distance * GAS_CONSUMPTION_RATIO
         self.total_time_on_route += current_travel_time
         self.total_distance += distance
         self.current_city = city
