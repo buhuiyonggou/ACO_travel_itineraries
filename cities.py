@@ -7,7 +7,7 @@ class City:
         self.name = name
         self.country = country
         self.stays_limit = stays_limit
-        self.actual_stays = random.randint(1, stays_limit)
+        # self.actual_stays = 1
         self.population = 0
         self.amenity_score_per_day = 0
         # record travel time from the prior city
@@ -16,5 +16,8 @@ class City:
     def assign_amenity_score(self):
         self.amenity_score_per_day = round(self.population * TRAVEL_TARGET_RATIO, 2)
 
-    def update_travel_time(self, prior_time):
-        self.travel_time_from_prior += prior_time
+    # def assign_random_stays(self):
+    #     self.actual_stays = random.randint(1, self.stays_limit)
+
+    # def update_actual_stays(self, allow_days):
+    #     self.actual_stays = allow_days
