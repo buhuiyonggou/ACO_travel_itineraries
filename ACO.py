@@ -14,19 +14,19 @@ from globalDefinition import (
 )
 from matplotlib import pyplot as plt
 
-TOTAL_BUDGET = 5000
-TOTAL_DAYS = 20
-NUM_ANTS = 2
-NUM_ITERATIONS = 2
+TOTAL_BUDGET = 2000
+TOTAL_DAYS = 11
+NUM_ANTS = 150
+NUM_ITERATIONS = 100
 
 cities = [
-    City(name="Tokyo", country="Japan", stays_limit=2),
-    City(name="Kamakura", country="Japan", stays_limit=6),
+    City(name="Tokyo", country="Japan", stays_limit=5),
+    City(name="Kamakura", country="Japan", stays_limit=2),
     City(name="Hakone", country="Japan", stays_limit=3),
     City(name="Fujikawaguchiko", country="Japan", stays_limit=3),
     City(name="Numazu", country="Japan", stays_limit=2),
     City(name="Shimoda", country="Japan", stays_limit=2),
-    City(name="Atami", country="Japan", stays_limit=5),
+    City(name="Atami", country="Japan", stays_limit=2),
 ]
 
 lodging = [
@@ -46,6 +46,7 @@ pheromone_matrix = PheromoneMatrix(len(cities), INITIAL_PHEROMONE, EVAPORATION_R
 tours = list()
 best_tour = None
 best_amenity_score = 0
+cov = {}
 
 for city in cities:
     city.population = get_city_population(city.name, city.country)
@@ -147,6 +148,7 @@ for iteration in range(NUM_ITERATIONS):
                 best_tour = ant.current_path()
                 best_ant = ant
 
+    cov[iteration+1] = best_amenity_score
     # Update the pheromone matrix
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
@@ -170,13 +172,13 @@ print("Total cost", ant.total_cost)
 print("Amenity Score:", best_amenity_score)
 
 #plot the best graph
-
-new_dict = {}
+plt.figure(1)
+graph_dict = {}
 z_values=[]
 for index,city in enumerate(best_ant.current_path()):   
-    new_dict[index] =  lat_len[city_to_index[city]]
+    graph_dict[index] =  lat_len[city_to_index[city]]
     z_values.append(city.name)
-x_values, y_values = zip(*new_dict.values())
+x_values, y_values = zip(*graph_dict.values())
 plt.plot(x_values,y_values,'k*-')
 for index,(x,y,z) in enumerate(list(zip(x_values,y_values,z_values))[:-1]):
     plt.annotate('{},{}'.format(index,z),
@@ -185,8 +187,8 @@ for index,(x,y,z) in enumerate(list(zip(x_values,y_values,z_values))[:-1]):
                  ha='center', # horizontal alignment can be left, right or center
                  textcoords="offset points" # how to position the text
     )
-for start, end in zip(new_dict, list(new_dict.keys())[1:-1] + list(new_dict.keys())[:1]):
-    start_pos, end_pos = new_dict[start], new_dict[end]
+for start, end in zip(graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]):
+    start_pos, end_pos = graph_dict[start], graph_dict[end]
     mid_pos = ((start_pos[0] + end_pos[0]) / 2, (start_pos[1] + end_pos[1]) / 2)
     plt.arrow(start_pos[0], start_pos[1], mid_pos[0] - start_pos[0], mid_pos[1] - start_pos[1],
               head_width=0.02, head_length=0.02, fc='blue')
@@ -196,6 +198,12 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 plt.xlabel('latitude')
 plt.ylabel('longitude')
-plt.show()
+plt.title('Path of itinerary')
 
-#
+#plot covergent graph
+plt.figure(2)
+plt.plot(list(cov.keys()),list(cov.values()))
+plt.xlabel('iteration')
+plt.ylabel('best amenity score')
+plt.title('convergence curve')
+plt.show()
