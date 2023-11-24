@@ -46,6 +46,7 @@ pheromone_matrix = PheromoneMatrix(len(cities), INITIAL_PHEROMONE, EVAPORATION_R
 tours = list()
 best_tour = None
 best_amenity_score = 0
+best_cost = TOTAL_BUDGET
 cov = {}
 
 for city in cities:
@@ -143,9 +144,10 @@ for iteration in range(NUM_ITERATIONS):
             )
             tours.append(ant.visited)
             # Check if the new tour has a higher amenity score and satisfies budget and day constraints
-            if amenity_score > best_amenity_score:
+            if amenity_score > best_amenity_score or (amenity_score==best_amenity_score and ant.total_cost<best_cost):
                 best_amenity_score = amenity_score
                 best_tour = ant.current_path()
+                best_cost= ant.total_cost
                 best_ant = ant
 
     cov[iteration+1] = best_amenity_score
