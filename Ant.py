@@ -1,5 +1,4 @@
 import random
-from DataCollection import get_driving_cost_cached
 from globalDefinition import GAS_CONSUMPTION_RATIO
 
 
@@ -39,7 +38,7 @@ class Ant:
         return self.total_time < maximum_day and self.total_cost < budget
 
     # the probablity equals: pheromone_level of current path/total probabilities of all unvisited path
-    def calculate_probabilities(self, pheromone_matrix, city_to_index, alpha, beta):
+    def calculate_probabilities(self, distance_time,pheromone_matrix, city_to_index, alpha, beta):
         probabilities = {}
         total = 0
         for city in city_to_index.keys():
@@ -49,14 +48,14 @@ class Ant:
                 pheromone_level = pheromone_matrix.get_pheromone_level(
                     index_current, index_target
                 )
-                distance, durantion = get_driving_cost_cached(
-                    self.current_city.name, city.name
-                )
+                distance, durantion = distance_time[city_to_index[self.current_city]][city_to_index[city]]
                 probabilities[city] = (pheromone_level**alpha) * (
                     (1.0 / distance) ** beta
                 )
                 total += probabilities[city]
         # get prob = next_chosen_path/total prob of unvisited cities
+        if not total:
+            return None
         probabilities = {city: prob / total for city, prob in probabilities.items()}
         return probabilities
 
