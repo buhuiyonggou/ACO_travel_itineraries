@@ -3,7 +3,7 @@ from PheromoneMatrix import PheromoneMatrix
 from Ant import Ant
 from cities import City
 from lodging import Lodging
-from DataCollection import get_driving_cost_cached, get_city_population
+from DataCollection import get_driving_cost_cached, get_city_population,get_location_cached
 from globalDefinition import (
     ALPHA,
     BETA,
@@ -12,11 +12,12 @@ from globalDefinition import (
     INITIAL_PHEROMONE,
     EVAPORATION_RATE,
 )
+from matplotlib import pyplot as plt
 
-TOTAL_BUDGET = 5000
+TOTAL_BUDGET = 2000
 TOTAL_DAYS = 11
 NUM_ANTS = 150
-NUM_ITERATIONS = 100
+NUM_ITERATIONS = 10
 
 cities = [
     City(name="Tokyo", country="Japan", stays_limit=5),
@@ -41,15 +42,17 @@ lodging = [
 city_to_index = {city: i for i, city in enumerate(cities)}
 # Initialize the pheromone matrix
 pheromone_matrix = PheromoneMatrix(len(cities), INITIAL_PHEROMONE, EVAPORATION_RATE)
-
 # record successful paths
 tours = list()
 best_tour = None
 best_amenity_score = 0
+best_cost = TOTAL_BUDGET
+cov = {}
 
 for city in cities:
     city.population = get_city_population(city.name, city.country)
     city.assign_amenity_score()
+    
     # city.assign_random_stays()
 
 # reset visited path for ants but do not change pheromones on paths
@@ -72,9 +75,7 @@ for iteration in range(NUM_ITERATIONS):
             # decide the next city
             next_city = ant.choose_next_city(probabilities)
             if next_city is not None:
-                distance, travel_time = get_driving_cost_cached(
-                    ant.current_city.name, next_city.name
-                )
+                distance, travel_time = get_driving_cost_cached(ant.current_city.name, next_city.name)
             # we assume at least one day stay for cities on the route, therefore + 1
             current_residual_time = TOTAL_DAYS - (ant.total_time + travel_time + 1)
             lodging_next = next(
@@ -85,12 +86,12 @@ for iteration in range(NUM_ITERATIONS):
                 + distance * GAS_CONSUMPTION_RATIO
                 + lodging_next.price * 1
             )
-            print(
-                f"current_residual_time: {current_residual_time}, used total time: {ant.total_time}, "
-                f"used travel time:{ant.total_time_on_route}, used lodging time:{ant.total_time_stays}, "
-                f"current_residual_budget: {current_residual_budget}, used total cost: {ant.total_cost}"
-                f"used lodging time:{ant.total_cost},"
-            )
+            # print(
+            #     f"current_residual_time: {current_residual_time}, used total time: {ant.total_time}, "
+            #     f"used travel time:{ant.total_time_on_route}, used lodging time:{ant.total_time_stays}, "
+            #     f"current_residual_budget: {current_residual_budget}, used total cost: {ant.total_cost}"
+            #     f"used lodging time:{ant.total_cost},"
+            # )
             # if we don't have time to get to the next city or can't afford at least one night
             if current_residual_time < 0 or current_residual_budget < 0:
                 break
@@ -117,8 +118,7 @@ for iteration in range(NUM_ITERATIONS):
 
         # record the complete path for each ant
         distance_back, travel_time_back = get_driving_cost_cached(
-            ant.visited[-1].name, ant.visited[0].name
-        )
+            ant.visited[-1].name, ant.visited[0].name)
         if len(ant.visited) == len(cities) and ant.can_travel_more(
             TOTAL_DAYS - travel_time_back,
             TOTAL_BUDGET - distance_back * GAS_CONSUMPTION_RATIO,
@@ -132,11 +132,13 @@ for iteration in range(NUM_ITERATIONS):
             )
             tours.append(ant.visited)
             # Check if the new tour has a higher amenity score and satisfies budget and day constraints
-            if amenity_score > best_amenity_score:
+            if amenity_score > best_amenity_score or (amenity_score==best_amenity_score and ant.total_cost<best_cost):
                 best_amenity_score = amenity_score
                 best_tour = ant.current_path()
+                best_cost= ant.total_cost
                 best_ant = ant
 
+    cov[iteration+1] = best_amenity_score
     # Update the pheromone matrix
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
@@ -158,3 +160,40 @@ print(
 )
 print("Total cost", ant.total_cost)
 print("Amenity Score:", best_amenity_score)
+
+#plot the best graph
+plt.figure(1)
+graph_dict = {}
+z_values=[]
+for index,city in enumerate(best_ant.current_path()):   
+    graph_dict[index] =  get_location_cached(city.name)
+    z_values.append(city.name)
+x_values, y_values = zip(*graph_dict.values())
+plt.plot(x_values,y_values,'k*-')
+for index,(x,y,z) in enumerate(list(zip(x_values,y_values,z_values))[:-1]):
+    plt.annotate('{},{}'.format(index,z),
+                 (x,y), # these are the coordinates to position the label
+                 xytext=(0,10), # distance from text to points (x,y)
+                 ha='center', # horizontal alignment can be left, right or center
+                 textcoords="offset points" # how to position the text
+    )
+for start, end in zip(graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]):
+    start_pos, end_pos = graph_dict[start], graph_dict[end]
+    mid_pos = ((start_pos[0] + end_pos[0]) / 2, (start_pos[1] + end_pos[1]) / 2)
+    plt.arrow(start_pos[0], start_pos[1], mid_pos[0] - start_pos[0], mid_pos[1] - start_pos[1],
+              head_width=0.02, head_length=0.02, fc='blue')
+    
+ax = plt.gca()
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+plt.xlabel('latitude')
+plt.ylabel('longitude')
+plt.title('Path of itinerary')
+
+#plot covergent graph
+plt.figure(2)
+plt.plot(list(cov.keys()),list(cov.values()))
+plt.xlabel('iteration')
+plt.ylabel('best amenity score')
+plt.title('convergence curve')
+plt.show()

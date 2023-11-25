@@ -2,7 +2,7 @@ import requests
 from globalDefinition import GOOGLE_MAP_API
 
 distance_cache = {}
-
+location_cache = {}
 
 def get_coordinates(city_name):
     params = {"address": city_name, "key": GOOGLE_MAP_API}
@@ -25,6 +25,9 @@ def get_driving_cost(origin_name, destination_name):
 
     if origin_lat is None or dest_lat is None:
         return 0
+
+    location_cache[origin_name]= (origin_lat,origin_lng)
+    location_cache[destination_name]= (dest_lat,dest_lng)
 
     params = {
         "origin": f"{origin_lat},{origin_lng}",
@@ -53,12 +56,17 @@ def get_driving_cost_cached(origin_name, destination_name):
         return distance_cache[cache_key]
 
     distance, duration = get_driving_cost(origin_name, destination_name)
-    print(
-        f"distance between {origin_name} and {destination_name} is {distance}, spending {round(24* duration, 2)} hours"
-    )
+    # print(
+    #     f"distance between {origin_name} and {destination_name} is {distance}, spending {round(24* duration, 2)} hours"
+    # )
     distance_cache[cache_key] = (distance, duration)
     return distance, duration
 
+def get_location_cached(location):
+    cache_key = location
+    if cache_key in location:
+        return location_cache[cache_key]
+    return None,None
 
 def get_city_population(city_name, country_name):
     base_url = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/geonames-all-cities-with-a-population-1000/records"

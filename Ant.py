@@ -39,7 +39,7 @@ class Ant:
         return self.total_time < maximum_day and self.total_cost < budget
 
     # the probablity equals: pheromone_level of current path/total probabilities of all unvisited path
-    def calculate_probabilities(self, pheromone_matrix, city_to_index, alpha, beta):
+    def calculate_probabilities(self,pheromone_matrix, city_to_index, alpha, beta):
         probabilities = {}
         total = 0
         for city in city_to_index.keys():
@@ -57,6 +57,8 @@ class Ant:
                 )
                 total += probabilities[city]
         # get prob = next_chosen_path/total prob of unvisited cities
+        if not total:
+            return None
         probabilities = {city: prob / total for city, prob in probabilities.items()}
         return probabilities
 
