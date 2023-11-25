@@ -3,7 +3,11 @@ from PheromoneMatrix import PheromoneMatrix
 from Ant import Ant
 from cities import City
 from lodging import Lodging
-from DataCollection import get_driving_cost_cached, get_city_population,get_location_cached
+from DataCollection import (
+    get_driving_cost_cached,
+    get_city_population,
+    get_location_cached,
+)
 from globalDefinition import (
     ALPHA,
     BETA,
@@ -12,32 +16,17 @@ from globalDefinition import (
     INITIAL_PHEROMONE,
     EVAPORATION_RATE,
 )
+from test_cases import Case1, Case2, Case3
 from matplotlib import pyplot as plt
 
-TOTAL_BUDGET = 2500
-TOTAL_DAYS = 13
-NUM_ANTS = 150
+TOTAL_BUDGET = Case3[2]
+TOTAL_DAYS = Case3[3]
+NUM_ANTS = 100
 NUM_ITERATIONS = 150
 
-cities = [
-    City(name="Tokyo", country="Japan", stays_limit=5),
-    City(name="Kamakura", country="Japan", stays_limit=2),
-    City(name="Hakone", country="Japan", stays_limit=3),
-    City(name="Fujikawaguchiko", country="Japan", stays_limit=3),
-    City(name="Numazu", country="Japan", stays_limit=2),
-    City(name="Shimoda", country="Japan", stays_limit=2),
-    City(name="Atami", country="Japan", stays_limit=2),
-]
+cities = Case3[0]
 
-lodging = [
-    Lodging("Tokyo", 150),
-    Lodging("Kamakura", 100),
-    Lodging("Hakone", 250),
-    Lodging("Fujikawaguchiko", 240),
-    Lodging("Numazu", 90),
-    Lodging("Shimoda", 280),
-    Lodging("Atami", 120),
-]
+lodging = Case3[1]
 
 city_to_index = {city: i for i, city in enumerate(cities)}
 # Initialize the pheromone matrix
@@ -53,7 +42,7 @@ top_5_itinerary = []
 for city in cities:
     city.population = get_city_population(city.name, city.country)
     city.assign_amenity_score()
-    
+
     # city.assign_random_stays()
 
 # reset visited path for ants but do not change pheromones on paths
@@ -76,7 +65,9 @@ for iteration in range(NUM_ITERATIONS):
             # decide the next city
             next_city = ant.choose_next_city(probabilities)
             if next_city is not None:
-                distance, travel_time = get_driving_cost_cached(ant.current_city.name, next_city.name)
+                distance, travel_time = get_driving_cost_cached(
+                    ant.current_city.name, next_city.name
+                )
             # we assume at least one day stay for cities on the route, therefore + 1
             current_residual_time = TOTAL_DAYS - (ant.total_time + travel_time + 1)
             lodging_next = next(
@@ -119,7 +110,8 @@ for iteration in range(NUM_ITERATIONS):
 
         # record the complete path for each ant
         distance_back, travel_time_back = get_driving_cost_cached(
-            ant.visited[-1].name, ant.visited[0].name)
+            ant.visited[-1].name, ant.visited[0].name
+        )
         if len(ant.visited) == len(cities) and ant.can_travel_more(
             TOTAL_DAYS - travel_time_back,
             TOTAL_BUDGET - distance_back * GAS_CONSUMPTION_RATIO,
@@ -133,33 +125,44 @@ for iteration in range(NUM_ITERATIONS):
             )
             tours.append(ant.visited)
 
-            path_string = '->'.join(city.name for city in ant.current_path())
+            path_string = "->".join(city.name for city in ant.current_path())
             itinerary = {
-                'best_amenity_score' : amenity_score,
-                'best_tour' : ant.current_path(),
-                'best_cost' : ant.total_cost,
-                'best_ant' : ant,
-                'best_tour_path': path_string
+                "best_amenity_score": amenity_score,
+                "best_tour": ant.current_path(),
+                "best_cost": ant.total_cost,
+                "best_ant": ant,
+                "best_tour_path": path_string,
             }
-            if len(top_5_itinerary)==5 and (amenity_score > top_5_itinerary[-1]['best_amenity_score'] 
-                or (amenity_score==top_5_itinerary[-1]['best_amenity_score'] and ant.total_cost<top_5_itinerary[-1]['best_amenity_score'])):
+            if len(top_5_itinerary) == 5 and (
+                amenity_score > top_5_itinerary[-1]["best_amenity_score"]
+                or (
+                    amenity_score == top_5_itinerary[-1]["best_amenity_score"]
+                    and ant.total_cost < top_5_itinerary[-1]["best_amenity_score"]
+                )
+            ):
                 top_5_itinerary.pop()
 
-            if len(top_5_itinerary)<5 and all(path_string not in itinerary['best_tour_path'] for itinerary in top_5_itinerary):
+            if len(top_5_itinerary) < 5 and all(
+                path_string not in itinerary["best_tour_path"]
+                for itinerary in top_5_itinerary
+            ):
                 top_5_itinerary.append(itinerary)
-                top_5_itinerary = sorted(top_5_itinerary,key=lambda x:(-x['best_amenity_score'],x['best_cost']))
+                top_5_itinerary = sorted(
+                    top_5_itinerary,
+                    key=lambda x: (-x["best_amenity_score"], x["best_cost"]),
+                )
 
-            best_amenity_score = top_5_itinerary[0]['best_amenity_score']
-            best_tour = top_5_itinerary[0]['best_tour']
-            best_cost = top_5_itinerary[0]['best_cost']
-            best_ant = top_5_itinerary[0]['best_ant']
-            best_tour_path = top_5_itinerary[0]['best_tour_path']
+            best_amenity_score = top_5_itinerary[0]["best_amenity_score"]
+            best_tour = top_5_itinerary[0]["best_tour"]
+            best_cost = top_5_itinerary[0]["best_cost"]
+            best_ant = top_5_itinerary[0]["best_ant"]
+            best_tour_path = top_5_itinerary[0]["best_tour_path"]
 
-    cov[iteration+1] = best_amenity_score
+    cov[iteration + 1] = best_amenity_score
     # Update the pheromone matrix
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
-        
+
 # print("Tours:", [[city.name for city in tour] for tour in tours])
 print("Best Tour:", [city.name for city in best_tour])
 # please help modify to print the actual stay in days of the best route
@@ -178,42 +181,60 @@ print(
 print("Total cost", best_cost)
 print("Amenity Score:", best_amenity_score)
 print("Top 5 Path:")
-for index,itinerary in enumerate(top_5_itinerary):   
-    print(index+1," ", itinerary['best_tour_path'], " ", itinerary['best_amenity_score'], " ", itinerary['best_cost'])
+for index, itinerary in enumerate(top_5_itinerary):
+    print(
+        index + 1,
+        " ",
+        itinerary["best_tour_path"],
+        " ",
+        itinerary["best_amenity_score"],
+        " ",
+        itinerary["best_cost"],
+    )
 
-#plot the best graph
+# plot the best graph
 plt.figure(1)
 graph_dict = {}
-z_values=[]
-for index,city in enumerate(best_ant.current_path()):   
-    graph_dict[index] =  get_location_cached(city.name)
+z_values = []
+for index, city in enumerate(best_ant.current_path()):
+    graph_dict[index] = get_location_cached(city.name)
     z_values.append(city.name)
 x_values, y_values = zip(*graph_dict.values())
-plt.plot(x_values,y_values,'k*-')
-for index,(x,y,z) in enumerate(list(zip(x_values,y_values,z_values))[:-1]):
-    plt.annotate('{},{}'.format(index,z),
-                 (x,y), # these are the coordinates to position the label
-                 xytext=(0,10), # distance from text to points (x,y)
-                 ha='center', # horizontal alignment can be left, right or center
-                 textcoords="offset points" # how to position the text
+plt.plot(x_values, y_values, "k*-")
+for index, (x, y, z) in enumerate(list(zip(x_values, y_values, z_values))[:-1]):
+    plt.annotate(
+        "{},{}".format(index, z),
+        (x, y),  # these are the coordinates to position the label
+        xytext=(0, 10),  # distance from text to points (x,y)
+        ha="center",  # horizontal alignment can be left, right or center
+        textcoords="offset points",  # how to position the text
     )
-for start, end in zip(graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]):
+for start, end in zip(
+    graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]
+):
     start_pos, end_pos = graph_dict[start], graph_dict[end]
     mid_pos = ((start_pos[0] + end_pos[0]) / 2, (start_pos[1] + end_pos[1]) / 2)
-    plt.arrow(start_pos[0], start_pos[1], mid_pos[0] - start_pos[0], mid_pos[1] - start_pos[1],
-              head_width=0.02, head_length=0.02, fc='blue')
-    
-ax = plt.gca()
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-plt.xlabel('latitude')
-plt.ylabel('longitude')
-plt.title('Path of itinerary')
+    plt.arrow(
+        start_pos[0],
+        start_pos[1],
+        mid_pos[0] - start_pos[0],
+        mid_pos[1] - start_pos[1],
+        head_width=0.02,
+        head_length=0.02,
+        fc="blue",
+    )
 
-#plot covergent graph
+ax = plt.gca()
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+plt.xlabel("latitude")
+plt.ylabel("longitude")
+plt.title("Path of itinerary")
+
+# plot covergent graph
 plt.figure(2)
-plt.plot(list(cov.keys()),list(cov.values()))
-plt.xlabel('iteration')
-plt.ylabel('best amenity score')
-plt.title('convergence curve')
+plt.plot(list(cov.keys()), list(cov.values()))
+plt.xlabel("iteration")
+plt.ylabel("best amenity score")
+plt.title("convergence curve")
 plt.show()
