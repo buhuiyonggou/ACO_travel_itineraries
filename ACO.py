@@ -3,7 +3,7 @@ from PheromoneMatrix import PheromoneMatrix
 from Ant import Ant
 from cities import City
 from lodging import Lodging
-from DataCollection import get_coordinates,get_driving_cost_cached, get_city_population
+from DataCollection import get_driving_cost_cached, get_city_population,get_location_cached
 from globalDefinition import (
     ALPHA,
     BETA,
@@ -17,7 +17,7 @@ from matplotlib import pyplot as plt
 TOTAL_BUDGET = 2000
 TOTAL_DAYS = 11
 NUM_ANTS = 150
-NUM_ITERATIONS = 100
+NUM_ITERATIONS = 10
 
 cities = [
     City(name="Tokyo", country="Japan", stays_limit=5),
@@ -55,19 +55,6 @@ for city in cities:
     
     # city.assign_random_stays()
 
-distance_time = [[[0,0] for _ in range(len(cities))] for _ in range(len(cities))]
-lat_len = [[0,0] for _ in range(len(cities))]
-
-for start_city in cities:
-    for end_city in cities:
-         if start_city.name!=end_city.name:
-            distance, travel_time = get_driving_cost_cached(start_city.name,end_city.name)
-            distance_time[city_to_index[start_city]][city_to_index[end_city]]= [distance,travel_time]
-
-for city in cities:
-    latitude, longitude = get_coordinates(city.name)
-    lat_len[city_to_index[city]] = [latitude,longitude]
-
 # reset visited path for ants but do not change pheromones on paths
 for iteration in range(NUM_ITERATIONS):
     random_city = random.choice(cities)
@@ -81,14 +68,14 @@ for iteration in range(NUM_ITERATIONS):
             cities
         ):
             probabilities = ant.calculate_probabilities(
-                distance_time,pheromone_matrix, city_to_index, ALPHA, BETA
+                pheromone_matrix, city_to_index, ALPHA, BETA
             )
             if not probabilities:
                 break
             # decide the next city
             next_city = ant.choose_next_city(probabilities)
             if next_city is not None:
-                distance,travel_time = distance_time[city_to_index[ant.current_city]][city_to_index[next_city]]
+                distance, travel_time = get_driving_cost_cached(ant.current_city.name, next_city.name)
             # we assume at least one day stay for cities on the route, therefore + 1
             current_residual_time = TOTAL_DAYS - (ant.total_time + travel_time + 1)
             lodging_next = next(
@@ -130,7 +117,8 @@ for iteration in range(NUM_ITERATIONS):
             ant.update_lodging_cost(next_city, lodging_next)
 
         # record the complete path for each ant
-        distance_back,travel_time_back= distance_time[city_to_index[ant.visited[-1]]][city_to_index[ant.visited[0]]]
+        distance_back, travel_time_back = get_driving_cost_cached(
+            ant.visited[-1].name, ant.visited[0].name)
         if len(ant.visited) == len(cities) and ant.can_travel_more(
             TOTAL_DAYS - travel_time_back,
             TOTAL_BUDGET - distance_back * GAS_CONSUMPTION_RATIO,
@@ -178,7 +166,7 @@ plt.figure(1)
 graph_dict = {}
 z_values=[]
 for index,city in enumerate(best_ant.current_path()):   
-    graph_dict[index] =  lat_len[city_to_index[city]]
+    graph_dict[index] =  get_location_cached(city.name)
     z_values.append(city.name)
 x_values, y_values = zip(*graph_dict.values())
 plt.plot(x_values,y_values,'k*-')
