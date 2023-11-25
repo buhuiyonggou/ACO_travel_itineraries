@@ -14,10 +14,10 @@ from globalDefinition import (
 )
 from matplotlib import pyplot as plt
 
-TOTAL_BUDGET = 2000
-TOTAL_DAYS = 11
+TOTAL_BUDGET = 2500
+TOTAL_DAYS = 13
 NUM_ANTS = 150
-NUM_ITERATIONS = 10
+NUM_ITERATIONS = 150
 
 cities = [
     City(name="Tokyo", country="Japan", stays_limit=5),
@@ -48,6 +48,7 @@ best_tour = None
 best_amenity_score = 0
 best_cost = TOTAL_BUDGET
 cov = {}
+top_5_itinerary = []
 
 for city in cities:
     city.population = get_city_population(city.name, city.country)
@@ -131,18 +132,34 @@ for iteration in range(NUM_ITERATIONS):
                 travel_time_back,
             )
             tours.append(ant.visited)
-            # Check if the new tour has a higher amenity score and satisfies budget and day constraints
-            if amenity_score > best_amenity_score or (amenity_score==best_amenity_score and ant.total_cost<best_cost):
-                best_amenity_score = amenity_score
-                best_tour = ant.current_path()
-                best_cost= ant.total_cost
-                best_ant = ant
+
+            path_string = '->'.join(city.name for city in ant.current_path())
+            itinerary = {
+                'best_amenity_score' : amenity_score,
+                'best_tour' : ant.current_path(),
+                'best_cost' : ant.total_cost,
+                'best_ant' : ant,
+                'best_tour_path': path_string
+            }
+            if len(top_5_itinerary)==5 and (amenity_score > top_5_itinerary[-1]['best_amenity_score'] 
+                or (amenity_score==top_5_itinerary[-1]['best_amenity_score'] and ant.total_cost<top_5_itinerary[-1]['best_amenity_score'])):
+                top_5_itinerary.pop()
+
+            if len(top_5_itinerary)<5 and all(path_string not in itinerary['best_tour_path'] for itinerary in top_5_itinerary):
+                top_5_itinerary.append(itinerary)
+                top_5_itinerary = sorted(top_5_itinerary,key=lambda x:(-x['best_amenity_score'],x['best_cost']))
+
+            best_amenity_score = top_5_itinerary[0]['best_amenity_score']
+            best_tour = top_5_itinerary[0]['best_tour']
+            best_cost = top_5_itinerary[0]['best_cost']
+            best_ant = top_5_itinerary[0]['best_ant']
+            best_tour_path = top_5_itinerary[0]['best_tour_path']
 
     cov[iteration+1] = best_amenity_score
     # Update the pheromone matrix
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
-
+        
 # print("Tours:", [[city.name for city in tour] for tour in tours])
 print("Best Tour:", [city.name for city in best_tour])
 # please help modify to print the actual stay in days of the best route
@@ -158,8 +175,11 @@ print(
         for city in best_ant.current_path()
     ][:-1],
 )
-print("Total cost", ant.total_cost)
+print("Total cost", best_cost)
 print("Amenity Score:", best_amenity_score)
+print("Top 5 Path:")
+for index,itinerary in enumerate(top_5_itinerary):   
+    print(index+1," ", itinerary['best_tour_path'], " ", itinerary['best_amenity_score'], " ", itinerary['best_cost'])
 
 #plot the best graph
 plt.figure(1)
