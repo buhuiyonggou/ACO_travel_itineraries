@@ -27,8 +27,8 @@ def get_driving_cost(origin_name, destination_name):
     if origin_lat is None or dest_lat is None:
         return 0
 
-    location_cache[origin_name]= (origin_lat,origin_lng)
-    location_cache[destination_name]= (dest_lat,dest_lng)
+    location_cache[origin_name]= (origin_lng,origin_lat)
+    location_cache[destination_name]= (dest_lng,dest_lat)
 
     params = {
         "origin": f"{origin_lat},{origin_lng}",
