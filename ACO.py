@@ -219,16 +219,16 @@ for start, end in zip(
         start_pos[1],
         mid_pos[0] - start_pos[0],
         mid_pos[1] - start_pos[1],
-        head_width=0.02,
-        head_length=0.02,
-        fc="blue",
+        head_width=0.2,
+        head_length=0.2,
+        fc="black",
     )
 
 ax = plt.gca()
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-plt.xlabel("latitude")
-plt.ylabel("longitude")
+plt.xlabel("longitude")
+plt.ylabel("latitude")
 plt.title("Path of itinerary")
 
 # plot covergent graph
