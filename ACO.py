@@ -161,71 +161,73 @@ for iteration in range(NUM_ITERATIONS):
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
 
-try:
-    # Only execute these print statements if best_tour is not None
-    print("Best Tour:", [city.name for city in best_tour])
+# print("Tours:", [[city.name for city in tour] for tour in tours])
+print("Best Tour:", [city.name for city in best_tour])
+# please help modify to print the actual stay in days of the best route
+print(
+    "Stay in days:",
+    [best_ant.stay_in_cities[city.name] for city in best_ant.current_path()][:-1],
+)
+# please help modify to print the scores in days of the best route
+print(
+    "Got scores:",
+    [
+        round(city.amenity_score_per_day * best_ant.stay_in_cities[city.name], 2)
+        for city in best_ant.current_path()
+    ][:-1],
+)
+print("Total cost", best_cost)
+print("Amenity Score:", best_amenity_score)
+print("Top 5 Path:")
+for index, itinerary in enumerate(top_5_itinerary):
     print(
-        "Stay in days:",
-        [best_ant.stay_in_cities[city.name] for city in best_ant.current_path()][:-1],
+        index + 1,
+        " ",
+        itinerary["best_tour_path"],
+        " ",
+        itinerary["best_amenity_score"],
+        " ",
+        itinerary["best_cost"],
     )
-    print(
-        "Got scores:",
-        [
-            round(city.amenity_score_per_day * best_ant.stay_in_cities[city.name], 2)
-            for city in best_ant.current_path()
-        ][:-1],
-    )
-    print("Total cost", best_cost)
-    print("Amenity Score:", best_amenity_score)
-    print("Top 5 Path:")
-    for index, itinerary in enumerate(top_5_itinerary):
-        print(
-            index + 1,
-            " ",
-            itinerary["best_tour_path"],
-            " ",
-            itinerary["best_amenity_score"],
-            " ",
-            itinerary["best_cost"],
-        )
-    # plot the best graph
-    plt.figure(1)
-    graph_dict = {}
-    z_values = []
-    for index, city in enumerate(best_ant.current_path()):
-        graph_dict[index] = get_location_cached(city.name)
-        z_values.append(city.name)
-    x_values, y_values = zip(*graph_dict.values())
-    plt.plot(x_values, y_values, "k*-")
-    for index, (x, y, z) in enumerate(list(zip(x_values, y_values, z_values))[:-1]):
-        plt.annotate(
-            "{},{}".format(index, z),
-            (x, y),  # these are the coordinates to position the label
-            xytext=(0, 10),  # distance from text to points (x,y)
-            ha="center",  # horizontal alignment can be left, right or center
-            textcoords="offset points",  # how to position the text
-        )
-    for start, end in zip(
-        graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]
-    ):
-        start_pos, end_pos = graph_dict[start], graph_dict[end]
-        mid_pos = ((start_pos[0] + end_pos[0]) / 2, (start_pos[1] + end_pos[1]) / 2)
-        plt.arrow(
-            start_pos[0],
-            start_pos[1],
-            mid_pos[0] - start_pos[0],
-            mid_pos[1] - start_pos[1],
-            head_width=0.02,
-            head_length=0.02,
-            fc="blue",
-        )
 
-    ax = plt.gca()
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    plt.xlabel("latitude")
-    plt.ylabel("longitude")
-    plt.title("Path of itinerary")
+# plot the best graph
+plt.figure(1)
+graph_dict = {}
+z_values = []
+for index, city in enumerate(best_ant.current_path()):
+    graph_dict[index] = get_location_cached(city.name)
+    z_values.append(city.name)
+x_values, y_values = zip(*graph_dict.values())
+plt.plot(x_values, y_values, "k*-")
+for index, (x, y, z) in enumerate(list(zip(x_values, y_values, z_values))[:-1]):
+    plt.annotate(
+        "{},{}".format(index, z),
+        (x, y),  # these are the coordinates to position the label
+        xytext=(0, 10),  # distance from text to points (x,y)
+        ha="center",  # horizontal alignment can be left, right or center
+        textcoords="offset points",  # how to position the text
+    )
+for start, end in zip(
+    graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]
+):
+    start_pos, end_pos = graph_dict[start], graph_dict[end]
+    mid_pos = ((start_pos[0] + end_pos[0]) / 2, (start_pos[1] + end_pos[1]) / 2)
+    plt.arrow(
+        start_pos[0],
+        start_pos[1],
+        mid_pos[0] - start_pos[0],
+        mid_pos[1] - start_pos[1],
+        head_width=0.02,
+        head_length=0.02,
+        fc="blue",
+    )
+
+ax = plt.gca()
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+plt.xlabel("latitude")
+plt.ylabel("longitude")
+plt.title("Path of itinerary")
 
     # plot covergent graph
     plt.figure(2)
