@@ -167,100 +167,105 @@ for iteration in range(NUM_ITERATIONS):
     # Update the pheromone matrix
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
-
-# print("Tours:", [[city.name for city in tour] for tour in tours])
-print("Best Tour:", [city.name for city in best_tour])
-# please help modify to print the actual stay in days of the best route
-print(
-    "Stay in days:",
-    [best_ant.stay_in_cities[city.name] for city in best_ant.current_path()][:-1],
-)
-# please help modify to print the scores in days of the best route
-print(
-    "Got scores:",
-    [
-        round(city.amenity_score_per_day * best_ant.stay_in_cities[city.name], 2)
-        for city in best_ant.current_path()
-    ][:-1],
-)
-print("Total cost", best_cost)
-print("Amenity Score:", best_amenity_score)
-print("Distance:", best_ant.total_distance)
-print("Top 5 Path:")
-for index, itinerary in enumerate(top_5_itinerary):
+try:
+    # print("Tours:", [[city.name for city in tour] for tour in tours])
+    print("Best Tour:", [city.name for city in best_tour])
+    # please help modify to print the actual stay in days of the best route
     print(
-        index + 1,
-        " ",
-        itinerary["best_tour_path"],
-        " ",
-        itinerary["best_amenity_score"],
-        " ",
-        itinerary["best_cost"],
+        "Stay in days:",
+        [best_ant.stay_in_cities[city.name] for city in best_ant.current_path()][:-1],
     )
-
-#Greedy Result
-greedy_start_city = best_ant.visited[0]
-greedy_matching_lodging = next(lodge for lodge in lodging if lodge.city == greedy_start_city.name)
-greedy_ant = Ant(greedy_start_city,greedy_matching_lodging)
-#Follow the same stay in each city as best ant
-greedy_ant.stay_in_cities = best_ant.stay_in_cities
-greedy(greedy_ant)
-
-# plot the best graph
-figure, axis = plt.subplots(2, 1,figsize=(7, 8))
-figure.tight_layout(pad=5)
-selected_ant = None
-for i in range (2): 
-    if i == 0:
-        selected_ant = best_ant
-    else:
-        selected_ant = greedy_ant
-    
-    graph_dict = {}
-    z_values = []
-    for index, city in enumerate(selected_ant.current_path()):
-        graph_dict[index] = get_location_cached(city.name)
-        z_values.append(city.name)
-    x_values, y_values = zip(*graph_dict.values())
-    axis[i].plot(x_values, y_values, "k*-")
-    for index, (x, y, z) in enumerate(list(zip(x_values, y_values, z_values))[:-1]):
-        axis[i].annotate(
-            "{},{}".format(index, z),
-            (x, y),  # these are the coordinates to position the label
-            xytext=(0, 10),  # distance from text to points (x,y)
-            ha="center",  # horizontal alignment can be left, right or center
-            textcoords="offset points",  # how to position the text
+    # please help modify to print the scores in days of the best route
+    print(
+        "Got scores:",
+        [
+            round(city.amenity_score_per_day * best_ant.stay_in_cities[city.name], 2)
+            for city in best_ant.current_path()
+        ][:-1],
+    )
+    print("Total cost", best_cost)
+    print("Amenity Score:", best_amenity_score)
+    print("Distance:", best_ant.total_distance)
+    print("Top 5 Path:")
+    for index, itinerary in enumerate(top_5_itinerary):
+        print(
+            index + 1,
+            " ",
+            itinerary["best_tour_path"],
+            " ",
+            itinerary["best_amenity_score"],
+            " ",
+            itinerary["best_cost"],
         )
-    for start, end in zip(
-        graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]
-    ):
-        start_pos, end_pos = graph_dict[start], graph_dict[end]
-        mid_pos = ((start_pos[0] + end_pos[0]) / 2, (start_pos[1] + end_pos[1]) / 2)
-        axis[i].arrow(
-            start_pos[0],
-            start_pos[1],
-            mid_pos[0] - start_pos[0],
-            mid_pos[1] - start_pos[1],
-            head_width=0.2,
-            head_length=0.2,
-            fc="black",
-        )
-    ax = axis[i]
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    axis[i].set_xlabel("longitude")
-    axis[i].set_ylabel("latitude")
-    axis[i].text(0.90, 0.95, f"Distance: {round(selected_ant.total_distance)} km", fontsize=8, color='black', ha='left', va='top', transform=ax.transAxes)
-    axis[i].text(0.90, 0.90, f"Cost: {round(selected_ant.total_cost)}", fontsize=8, color='black', ha='left', va='top', transform=ax.transAxes)
-    if i == 0:
-        axis[i].set_title("Path of itinerary using ant colony algorithm",pad=20)
-    else:
-        axis[i].set_title("Path of itinerary using greedy algorithm",pad=20)
 
-# plot covergent graph
-plt.figure(2)
-plt.plot(list(cov.keys()), list(cov.values()))
-plt.xlabel("iteration")
-plt.ylabel("best amenity score")
-plt.title("convergence curve")
-plt.show()
+    #Greedy Result
+    greedy_start_city = best_ant.visited[0]
+    greedy_matching_lodging = next(lodge for lodge in lodging if lodge.city == greedy_start_city.name)
+    greedy_ant = Ant(greedy_start_city,greedy_matching_lodging)
+    #Follow the same stay in each city as best ant
+    greedy_ant.stay_in_cities = best_ant.stay_in_cities
+    greedy(greedy_ant)
+
+    # plot the best graph
+    figure, axis = plt.subplots(2, 1,figsize=(7, 8))
+    figure.tight_layout(pad=5)
+    selected_ant = None
+    for i in range (2): 
+        if i == 0:
+            selected_ant = best_ant
+        else:
+            selected_ant = greedy_ant
+        
+        graph_dict = {}
+        z_values = []
+        for index, city in enumerate(selected_ant.current_path()):
+            graph_dict[index] = get_location_cached(city.name)
+            z_values.append(city.name)
+        x_values, y_values = zip(*graph_dict.values())
+        axis[i].plot(x_values, y_values, "k*-")
+        for index, (x, y, z) in enumerate(list(zip(x_values, y_values, z_values))[:-1]):
+            axis[i].annotate(
+                "{},{}".format(index, z),
+                (x, y),  # these are the coordinates to position the label
+                xytext=(0, 10),  # distance from text to points (x,y)
+                ha="center",  # horizontal alignment can be left, right or center
+                textcoords="offset points",  # how to position the text
+            )
+        for start, end in zip(
+            graph_dict, list(graph_dict.keys())[1:-1] + list(graph_dict.keys())[:1]
+        ):
+            start_pos, end_pos = graph_dict[start], graph_dict[end]
+            mid_pos = ((start_pos[0] + end_pos[0]) / 2, (start_pos[1] + end_pos[1]) / 2)
+            axis[i].arrow(
+                start_pos[0],
+                start_pos[1],
+                mid_pos[0] - start_pos[0],
+                mid_pos[1] - start_pos[1],
+                head_width=0.2,
+                head_length=0.2,
+                fc="black",
+            )
+        ax = axis[i]
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        axis[i].set_xlabel("longitude")
+        axis[i].set_ylabel("latitude")
+        axis[i].text(0.90, 0.95, f"Distance: {round(selected_ant.total_distance)} km", fontsize=8, color='black', ha='left', va='top', transform=ax.transAxes)
+        axis[i].text(0.90, 0.90, f"Cost: {round(selected_ant.total_cost)}", fontsize=8, color='black', ha='left', va='top', transform=ax.transAxes)
+        if i == 0:
+            axis[i].set_title("Path of itinerary using ant colony algorithm",pad=20)
+        else:
+            axis[i].set_title("Path of itinerary using greedy algorithm",pad=20)
+
+    # plot covergent graph
+    plt.figure(2)
+    plt.plot(list(cov.keys()), list(cov.values()))
+    plt.xlabel("iteration")
+    plt.ylabel("best amenity score")
+    plt.title("convergence curve")
+    plt.show()
+
+except TypeError:
+    print(
+        "No optimal tour found within the given constraints. Consider extending the time span or increasing the budget."
+    )
