@@ -87,3 +87,17 @@ class Ant:
 
     def current_path(self):
         return self.visited
+    
+    def choose_closest_city(self,start_city,avaliable_cities):
+        next_city = None
+        min_distance = float('inf')
+        min_travel_time = float('inf')
+        for city in avaliable_cities:
+            distance, travel_time = get_driving_cost_cached(start_city.name, city.name)
+            if distance<min_distance:
+                min_distance = distance
+                min_travel_time = travel_time
+                next_city = city
+            print("distance: ",start_city.name, " ", city.name," ", distance)
+        return next_city,min_distance,min_travel_time
+    
