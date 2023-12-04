@@ -120,7 +120,7 @@ for iteration in range(NUM_ITERATIONS):
             TOTAL_BUDGET - distance_back * GAS_CONSUMPTION_RATIO,
         ):
             # exclude duplicated scores of the starting point
-            amenity_score = ant.get_amenity_score(ant.visited)
+            amenity_score = round(ant.get_amenity_score(ant.visited))
             ant.visit_city(
                 ant.visited[0],
                 distance_back,
@@ -132,9 +132,9 @@ for iteration in range(NUM_ITERATIONS):
             itinerary = {
                 "best_amenity_score": amenity_score,
                 "best_tour": ant.current_path(),
-                "best_cost": ant.total_cost,
+                "best_cost": round(ant.total_cost),
                 "best_ant": ant,
-                "best_tour_path": path_string,
+                "best_tour_path": path_string
             }
             if len(top_5_itinerary) == 5 and (
                 amenity_score > top_5_itinerary[-1]["best_amenity_score"]
@@ -145,10 +145,7 @@ for iteration in range(NUM_ITERATIONS):
             ):
                 top_5_itinerary.pop()
 
-            if len(top_5_itinerary) < 5 and all(
-                path_string not in itinerary["best_tour_path"]
-                for itinerary in top_5_itinerary
-            ):
+            if len(top_5_itinerary) < 5 and all(isinstance(itinerary["best_cost"], (int, float)) and itinerary["best_cost"]!=existing_itinerary["best_cost"] for existing_itinerary in top_5_itinerary):
                 top_5_itinerary.append(itinerary)
                 top_5_itinerary = sorted(
                     top_5_itinerary,

@@ -1,9 +1,10 @@
 import requests
 import matplotlib.pyplot as plt
 from globalDefinition import GOOGLE_MAP_API
+from test_3_dataset import distance_cache, location_cache
 
-distance_cache = {}
-location_cache = {}
+# distance_cache = {}
+# location_cache = {}
 
 def get_coordinates(city_name):
     params = {"address": city_name, "key": GOOGLE_MAP_API}
@@ -57,9 +58,9 @@ def get_driving_cost_cached(origin_name, destination_name):
         return distance_cache[cache_key]
 
     distance, duration = get_driving_cost(origin_name, destination_name)
-    # print(
-    #     f"distance between {origin_name} and {destination_name} is {distance}, spending {round(24* duration, 2)} hours"
-    # )
+    print(
+        f"distance between {origin_name} and {destination_name} is {distance}, spending {round(24* duration, 2)} hours"
+    )
     distance_cache[cache_key] = (distance, duration)
     return distance, duration
 

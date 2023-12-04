@@ -98,6 +98,5 @@ class Ant:
                 min_distance = distance
                 min_travel_time = travel_time
                 next_city = city
-            print("distance: ",start_city.name, " ", city.name," ", distance)
         return next_city,min_distance,min_travel_time
     

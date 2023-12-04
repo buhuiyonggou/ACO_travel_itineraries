@@ -5,16 +5,6 @@ from cities import City
 from lodging import Lodging
 from DataCollection import (
     get_driving_cost_cached,
-    get_city_population,
-    get_location_cached,
-)
-from globalDefinition import (
-    ALPHA,
-    BETA,
-    GAS_CONSUMPTION_RATIO,
-    PHEROMONE_DEPOSIT,
-    INITIAL_PHEROMONE,
-    EVAPORATION_RATE,
 )
 from test_cases import Case1, Case2, Case3
 from matplotlib import pyplot as plt
@@ -22,15 +12,12 @@ from matplotlib import pyplot as plt
 cities = Case3[0]
 lodging = Case3[1]
 
-
-         
-
 def greedy(greedy_ant):
     start_city = greedy_ant.visited[0]
     avaliable_cities= [city for city in cities if city.name != start_city.name]
     while len(avaliable_cities) > 0:
         next_city,distance,travel_time = greedy_ant.choose_closest_city(start_city,avaliable_cities)
-       
+    
         greedy_ant.visit_city(next_city, distance, travel_time)
         lodging_next = next(
             lodge for lodge in lodging if lodge.city == next_city.name
@@ -48,6 +35,7 @@ def greedy(greedy_ant):
         distance_back,
         travel_time_back,
     )
+
     print("Greedy Tour:", [city.name for city in greedy_ant.current_path()])
     print(
         "Greedy Stay in days:",
