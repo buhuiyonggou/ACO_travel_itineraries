@@ -1,10 +1,9 @@
 import requests
 import matplotlib.pyplot as plt
-from apiKey import GOOGLE_MAP_API
-from test_3_dataset import distance_cache, location_cache
+from globalDefinition import GOOGLE_MAP_API
 
-# distance_cache = {}
-# location_cache = {}
+distance_cache = {}
+location_cache = {}
 
 def get_coordinates(city_name):
     params = {"address": city_name, "key": GOOGLE_MAP_API}
