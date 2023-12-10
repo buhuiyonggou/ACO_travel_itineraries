@@ -1,6 +1,6 @@
 import requests
 import matplotlib.pyplot as plt
-from globalDefinition import GOOGLE_MAP_API
+from apiKey import GOOGLE_MAP_API
 from test_3_dataset import distance_cache, location_cache
 
 # distance_cache = {}
@@ -114,26 +114,26 @@ test_routes = [("New York", "Washington"), ("London", "Manchester")]
 city_coords = test_get_coordinates(test_cities)
 route_costs = test_get_driving_cost(test_routes)
 
-plt.figure(figsize=(10, 5))
-plt.bar(city_coords.keys(), [coord[0]
-        for coord in city_coords.values()], label='Latitude')
-plt.bar(city_coords.keys(), [
-        coord[1] for coord in city_coords.values()], label='Longitude', alpha=0.7)
-plt.xlabel('City')
-plt.ylabel('Coordinates')
-plt.title('City Geographical Coordinates')
-plt.legend()
-plt.show()
+# plt.figure(figsize=(10, 5))
+# plt.bar(city_coords.keys(), [coord[0]
+#         for coord in city_coords.values()], label='Latitude')
+# plt.bar(city_coords.keys(), [
+#         coord[1] for coord in city_coords.values()], label='Longitude', alpha=0.7)
+# plt.xlabel('City')
+# plt.ylabel('Coordinates')
+# plt.title('City Geographical Coordinates')
+# plt.legend()
+# plt.show()
 
-plt.figure(figsize=(10, 5))
-plt.bar(range(len(route_costs)), [
-        cost[0] for cost in route_costs.values()], label='Distance (km)')
-plt.xticks(range(len(route_costs)), labels=[
-           f"{k[0]} to {k[1]}" for k in route_costs.keys()])
-plt.ylabel('Distance')
-plt.title('Driving Distance Between Cities')
-plt.legend()
-plt.show()
+# plt.figure(figsize=(10, 5))
+# plt.bar(range(len(route_costs)), [
+#         cost[0] for cost in route_costs.values()], label='Distance (km)')
+# plt.xticks(range(len(route_costs)), labels=[
+#            f"{k[0]} to {k[1]}" for k in route_costs.keys()])
+# plt.ylabel('Distance')
+# plt.title('Driving Distance Between Cities')
+# plt.legend()
+# plt.show()
 
 
 def test_get_city_population(cities):
@@ -149,10 +149,10 @@ test_cities_countries = [
 
 city_populations = test_get_city_population(test_cities_countries)
 
-plt.figure(figsize=(10, 5))
-plt.bar([f"{k[0]}, {k[1]}" for k in city_populations.keys()],
-        city_populations.values())
-plt.xlabel('City, Country')
-plt.ylabel('Population')
-plt.title('City Populations')
-plt.show()
+# plt.figure(figsize=(10, 5))
+# plt.bar([f"{k[0]}, {k[1]}" for k in city_populations.keys()],
+#         city_populations.values())
+# plt.xlabel('City, Country')
+# plt.ylabel('Population')
+# plt.title('City Populations')
+# plt.show()

@@ -1,0 +1,1 @@
+GOOGLE_MAP_API = "AIzaSyCLJt50lO7x1n4QqtSjk-JxrdyTwRJL1_8"

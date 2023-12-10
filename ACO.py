@@ -53,7 +53,9 @@ for iteration in range(NUM_ITERATIONS):
     # ants = [Ant(random_city, matching_lodging) for _ in range(NUM_ANTS)]
     for _ in range(NUM_ANTS):
         random_city = random.choice(cities)
-        matching_lodging = next(lodge for lodge in lodging if lodge.city == random_city.name)
+        matching_lodging = next(
+            lodge for lodge in lodging if lodge.city == random_city.name
+        )
         ants.append(Ant(random_city, matching_lodging))
 
     for ant in ants:
@@ -134,7 +136,7 @@ for iteration in range(NUM_ITERATIONS):
                 "best_tour": ant.current_path(),
                 "best_cost": round(ant.total_cost),
                 "best_ant": ant,
-                "best_tour_path": path_string
+                "best_tour_path": path_string,
             }
             if len(top_5_itinerary) == 5 and (
                 amenity_score > top_5_itinerary[-1]["best_amenity_score"]
@@ -145,7 +147,11 @@ for iteration in range(NUM_ITERATIONS):
             ):
                 top_5_itinerary.pop()
 
-            if len(top_5_itinerary) < 5 and all(isinstance(itinerary["best_cost"], (int, float)) and itinerary["best_cost"]!=existing_itinerary["best_cost"] for existing_itinerary in top_5_itinerary):
+            if len(top_5_itinerary) < 5 and all(
+                isinstance(itinerary["best_cost"], (int, float))
+                and itinerary["best_cost"] != existing_itinerary["best_cost"]
+                for existing_itinerary in top_5_itinerary
+            ):
                 top_5_itinerary.append(itinerary)
                 top_5_itinerary = sorted(
                     top_5_itinerary,
@@ -191,18 +197,20 @@ try:
             " ",
             itinerary["best_cost"],
         )
-    #Greedy Result
+    # Greedy Result
     greedy_start_city = best_ant.visited[0]
-    greedy_matching_lodging = next(lodge for lodge in lodging if lodge.city == greedy_start_city.name)
-    greedy_ant = Ant(greedy_start_city,greedy_matching_lodging)
-    #Follow the same stay in each city as best ant
+    greedy_matching_lodging = next(
+        lodge for lodge in lodging if lodge.city == greedy_start_city.name
+    )
+    greedy_ant = Ant(greedy_start_city, greedy_matching_lodging)
+    # Follow the same stay in each city as best ant
     greedy_ant.stay_in_cities = best_ant.stay_in_cities
     greedy(greedy_ant)
     # plot the best graph
-    figure, axis = plt.subplots(2, 1,figsize=(7, 8))
+    figure, axis = plt.subplots(2, 1, figsize=(7, 8))
     figure.tight_layout(pad=5)
     selected_ant = None
-    for i in range (2): 
+    for i in range(2):
         if i == 0:
             selected_ant = best_ant
         else:
@@ -242,12 +250,30 @@ try:
         ax.spines["right"].set_visible(False)
         axis[i].set_xlabel("longitude")
         axis[i].set_ylabel("latitude")
-        axis[i].text(0.90, 0.95, f"Distance: {round(selected_ant.total_distance)} km", fontsize=8, color='black', ha='left', va='top', transform=ax.transAxes)
-        axis[i].text(0.90, 0.90, f"Cost: {round(selected_ant.total_cost)}", fontsize=8, color='black', ha='left', va='top', transform=ax.transAxes)
+        axis[i].text(
+            0.90,
+            0.95,
+            f"Distance: {round(selected_ant.total_distance)} km",
+            fontsize=8,
+            color="black",
+            ha="left",
+            va="top",
+            transform=ax.transAxes,
+        )
+        axis[i].text(
+            0.90,
+            0.90,
+            f"Cost: {round(selected_ant.total_cost)}",
+            fontsize=8,
+            color="black",
+            ha="left",
+            va="top",
+            transform=ax.transAxes,
+        )
         if i == 0:
-            axis[i].set_title("Path of itinerary using ant colony algorithm",pad=20)
+            axis[i].set_title("Path of itinerary using ant colony algorithm", pad=20)
         else:
-            axis[i].set_title("Path of itinerary using greedy algorithm",pad=20)
+            axis[i].set_title("Path of itinerary using greedy algorithm", pad=20)
 
     # plot covergent graph
     plt.figure(2)
