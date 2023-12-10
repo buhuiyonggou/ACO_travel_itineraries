@@ -66,6 +66,6 @@ Case3 = [
         Lodging("Luxembourg", 200),
         Lodging("Gent", 120),
     ],
-    9000,
+    5000,
     15,
 ]
