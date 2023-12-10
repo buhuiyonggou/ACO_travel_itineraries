@@ -1,6 +1,6 @@
 import requests
 import matplotlib.pyplot as plt
-from globalDefinition import GOOGLE_MAP_API
+from apiKey import GOOGLE_MAP_API
 from test_3_dataset import distance_cache, location_cache
 
 # distance_cache = {}
