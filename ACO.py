@@ -20,7 +20,7 @@ from matplotlib import pyplot as plt
 
 TOTAL_BUDGET = Case3[2]
 TOTAL_DAYS = Case3[3]
-NUM_ANTS = 230
+NUM_ANTS = 200
 NUM_ITERATIONS = 100
 
 cities = Case3[0]
@@ -41,16 +41,10 @@ top_5_itinerary = []
 for city in cities:
     city.population = get_city_population(city.name, city.country)
     city.assign_amenity_score()
-    # city.assign_random_stays()
 
 # reset visited path for ants but do not change pheromones on paths
 for iteration in range(NUM_ITERATIONS):
-    # random_city = random.choice(cities)
-    # matching_lodging = next(
-    #     lodge for lodge in lodging if lodge.city == random_city.name
-    # )
     ants = []
-    # ants = [Ant(random_city, matching_lodging) for _ in range(NUM_ANTS)]
     for _ in range(NUM_ANTS):
         random_city = random.choice(cities)
         matching_lodging = next(lodge for lodge in lodging if lodge.city == random_city.name)
@@ -81,12 +75,6 @@ for iteration in range(NUM_ITERATIONS):
                 + distance * GAS_CONSUMPTION_RATIO
                 + lodging_next.price * 1
             )
-            # print(
-            #     f"current_residual_time: {current_residual_time}, used total time: {ant.total_time}, "
-            #     f"used travel time:{ant.total_time_on_route}, used lodging time:{ant.total_time_stays}, "
-            #     f"current_residual_budget: {current_residual_budget}, used total cost: {ant.total_cost}"
-            #     f"used lodging time:{ant.total_cost},"
-            # )
             # if we don't have time to get to the next city or can't afford at least one night
             if current_residual_time < 0 or current_residual_budget < 0:
                 break
@@ -134,7 +122,9 @@ for iteration in range(NUM_ITERATIONS):
                 "best_tour": ant.current_path(),
                 "best_cost": round(ant.total_cost),
                 "best_ant": ant,
-                "best_tour_path": path_string
+                "best_tour_path": path_string,
+                "best_distance" :ant.total_distance,
+
             }
             if len(top_5_itinerary) == 5 and (
                 amenity_score > top_5_itinerary[-1]["best_amenity_score"]
@@ -157,29 +147,13 @@ for iteration in range(NUM_ITERATIONS):
             best_cost = top_5_itinerary[0]["best_cost"]
             best_ant = top_5_itinerary[0]["best_ant"]
             best_tour_path = top_5_itinerary[0]["best_tour_path"]
+            best_distance = top_5_itinerary[0]["best_distance"]
 
-    cov[iteration + 1] = best_amenity_score
+    cov[iteration + 1] = best_distance/best_amenity_score
     # Update the pheromone matrix
     for ant in ants:
         pheromone_matrix.update_pheromene(ant, PHEROMONE_DEPOSIT, city_to_index)
 try:
-    # print("Tours:", [[city.name for city in tour] for tour in tours])
-    print("Best Tour:", [city.name for city in best_tour])
-    # please help modify to print the actual stay in days of the best route
-    print(
-        "Stay in days:",
-        [best_ant.stay_in_cities[city.name] for city in best_ant.current_path()][:-1],
-    )
-    # please help modify to print the scores in days of the best route
-    print(
-        "Got scores:",
-        [
-            round(city.amenity_score_per_day * best_ant.stay_in_cities[city.name], 2)
-            for city in best_ant.current_path()
-        ][:-1],
-    )
-    print("Total cost", best_cost)
-    print("Amenity Score:", best_amenity_score)
     print("Top 5 Path:")
     for index, itinerary in enumerate(top_5_itinerary):
         print(
@@ -190,6 +164,16 @@ try:
             itinerary["best_amenity_score"],
             " ",
             itinerary["best_cost"],
+            " ",
+            itinerary["best_ant"].total_time,
+            " ",
+            itinerary["best_ant"].total_time_on_route,
+            " ",
+            itinerary["best_ant"].total_time_stays
+        )
+        print(
+            "Stay in days:",
+            [itinerary["best_ant"].stay_in_cities[city.name] for city in itinerary["best_ant"].current_path()][:-1],
         )
     #Greedy Result
     greedy_start_city = best_ant.visited[0]
@@ -197,7 +181,11 @@ try:
     greedy_ant = Ant(greedy_start_city,greedy_matching_lodging)
     #Follow the same stay in each city as best ant
     greedy_ant.stay_in_cities = best_ant.stay_in_cities
+    greedy_ant.total_cost = greedy_matching_lodging.price * greedy_ant.stay_in_cities[greedy_start_city.name]
+    greedy_ant.total_time_stays = greedy_ant.stay_in_cities[greedy_start_city.name]
+    greedy_ant.total_time = greedy_ant.total_time_on_route + greedy_ant.total_time_stays
     greedy(greedy_ant)
+
     # plot the best graph
     figure, axis = plt.subplots(2, 1,figsize=(7, 8))
     figure.tight_layout(pad=5)
@@ -253,7 +241,7 @@ try:
     plt.figure(2)
     plt.plot(list(cov.keys()), list(cov.values()))
     plt.xlabel("iteration")
-    plt.ylabel("best amenity score")
+    plt.ylabel("Distance/Amenity score")
     plt.title("convergence curve")
     plt.show()
 

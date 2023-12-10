@@ -57,12 +57,12 @@ def get_driving_cost_cached(origin_name, destination_name):
     if cache_key in distance_cache:
         return distance_cache[cache_key]
 
-    distance, duration = get_driving_cost(origin_name, destination_name)
-    print(
-        f"distance between {origin_name} and {destination_name} is {distance}, spending {round(24* duration, 2)} hours"
-    )
-    distance_cache[cache_key] = (distance, duration)
-    return distance, duration
+    # distance, duration = get_driving_cost(origin_name, destination_name)
+    # print(
+    #     f"distance between {origin_name} and {destination_name} is {distance}, spending {round(24* duration, 2)} hours"
+    # )
+    # distance_cache[cache_key] = (distance, duration)
+    # return distance, duration
 
 def get_location_cached(location):
     cache_key = location
@@ -92,67 +92,67 @@ def get_city_population(city_name, country_name):
         return None
 
 
-def test_get_coordinates(cities):
-    coords = {}
-    for city in cities:
-        lat, lon = get_coordinates(city)
-        coords[city] = (lat, lon)
-    return coords
+# def test_get_coordinates(cities):
+#     coords = {}
+#     for city in cities:
+#         lat, lon = get_coordinates(city)
+#         coords[city] = (lat, lon)
+#     return coords
 
 
-def test_get_driving_cost(routes):
-    costs = {}
-    for origin, destination in routes:
-        distance, duration = get_driving_cost(origin, destination)
-        costs[(origin, destination)] = (distance, duration)
-    return costs
+# def test_get_driving_cost(routes):
+#     costs = {}
+#     for origin, destination in routes:
+#         distance, duration = get_driving_cost(origin, destination)
+#         costs[(origin, destination)] = (distance, duration)
+#     return costs
 
 
-test_cities = ["New York", "London", "Tokyo"]
-test_routes = [("New York", "Washington"), ("London", "Manchester")]
+# test_cities = ["New York", "London", "Tokyo"]
+# test_routes = [("New York", "Washington"), ("London", "Manchester")]
 
-city_coords = test_get_coordinates(test_cities)
-route_costs = test_get_driving_cost(test_routes)
+# city_coords = test_get_coordinates(test_cities)
+# route_costs = test_get_driving_cost(test_routes)
 
-plt.figure(figsize=(10, 5))
-plt.bar(city_coords.keys(), [coord[0]
-        for coord in city_coords.values()], label='Latitude')
-plt.bar(city_coords.keys(), [
-        coord[1] for coord in city_coords.values()], label='Longitude', alpha=0.7)
-plt.xlabel('City')
-plt.ylabel('Coordinates')
-plt.title('City Geographical Coordinates')
-plt.legend()
-plt.show()
+# plt.figure(figsize=(10, 5))
+# plt.bar(city_coords.keys(), [coord[0]
+#         for coord in city_coords.values()], label='Latitude')
+# plt.bar(city_coords.keys(), [
+#         coord[1] for coord in city_coords.values()], label='Longitude', alpha=0.7)
+# plt.xlabel('City')
+# plt.ylabel('Coordinates')
+# plt.title('City Geographical Coordinates')
+# plt.legend()
+# plt.show()
 
-plt.figure(figsize=(10, 5))
-plt.bar(range(len(route_costs)), [
-        cost[0] for cost in route_costs.values()], label='Distance (km)')
-plt.xticks(range(len(route_costs)), labels=[
-           f"{k[0]} to {k[1]}" for k in route_costs.keys()])
-plt.ylabel('Distance')
-plt.title('Driving Distance Between Cities')
-plt.legend()
-plt.show()
-
-
-def test_get_city_population(cities):
-    populations = {}
-    for city, country in cities:
-        pop = get_city_population(city, country)
-        populations[(city, country)] = pop
-    return populations
+# plt.figure(figsize=(10, 5))
+# plt.bar(range(len(route_costs)), [
+#         cost[0] for cost in route_costs.values()], label='Distance (km)')
+# plt.xticks(range(len(route_costs)), labels=[
+#            f"{k[0]} to {k[1]}" for k in route_costs.keys()])
+# plt.ylabel('Distance')
+# plt.title('Driving Distance Between Cities')
+# plt.legend()
+# plt.show()
 
 
-test_cities_countries = [
-    ("Tokyo", "Japan"), ("New York City", "United States"), ("London", "United Kingdom")]
+# def test_get_city_population(cities):
+#     populations = {}
+#     for city, country in cities:
+#         pop = get_city_population(city, country)
+#         populations[(city, country)] = pop
+#     return populations
 
-city_populations = test_get_city_population(test_cities_countries)
 
-plt.figure(figsize=(10, 5))
-plt.bar([f"{k[0]}, {k[1]}" for k in city_populations.keys()],
-        city_populations.values())
-plt.xlabel('City, Country')
-plt.ylabel('Population')
-plt.title('City Populations')
-plt.show()
+# test_cities_countries = [
+#     ("Tokyo", "Japan"), ("New York City", "United States"), ("London", "United Kingdom")]
+
+# city_populations = test_get_city_population(test_cities_countries)
+
+# plt.figure(figsize=(10, 5))
+# plt.bar([f"{k[0]}, {k[1]}" for k in city_populations.keys()],
+#         city_populations.values())
+# plt.xlabel('City, Country')
+# plt.ylabel('Population')
+# plt.title('City Populations')
+# plt.show()
